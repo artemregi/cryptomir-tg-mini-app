@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useBalance } from '../hooks/useBalance'
-import { formatRUB, formatUSDT, formatNumber } from '../utils/format'
+import { formatNumber } from '../utils/format'
 
 interface BalanceCardProps {
   onRefresh?: () => void
@@ -24,29 +24,29 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
   const usdtBalance = balance?.balances?.find(
     (b) => b.currency === 'USDT' || b.symbol === 'USDT'
   )
+  const usdtAmount = usdtBalance?.amount ?? 0
 
   return (
     <div
       className="relative mx-4 rounded-2xl overflow-hidden"
       style={{
-        minHeight: '160px',
         background: 'linear-gradient(145deg, #FFFFFF 0%, #F4F9FD 100%)',
         boxShadow: '0 4px 28px rgba(79,142,196,0.14), 0 1px 6px rgba(24,54,80,0.06)',
       }}
     >
       {/* Decorative orbs */}
       <div
-        className="absolute -top-8 -right-8 w-40 h-40 rounded-full pointer-events-none"
+        className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(77,180,234,0.18) 0%, transparent 70%)',
-          filter: 'blur(20px)',
+          background: 'radial-gradient(circle, rgba(77,180,234,0.15) 0%, transparent 70%)',
+          filter: 'blur(24px)',
         }}
       />
       <div
-        className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none"
+        className="absolute -bottom-10 -left-10 w-36 h-36 rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(79,142,196,0.12) 0%, transparent 70%)',
-          filter: 'blur(20px)',
+          background: 'radial-gradient(circle, rgba(79,142,196,0.1) 0%, transparent 70%)',
+          filter: 'blur(24px)',
         }}
       />
 
@@ -56,41 +56,31 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div
-              className="w-2 h-2 rounded-full"
-              style={{ background: '#00B894', boxShadow: '0 0 6px #00B894' }}
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ background: '#00B894', boxShadow: '0 0 5px #00B894' }}
             />
-            <span className="text-text-secondary text-xs font-medium tracking-wider uppercase">
-              Основной баланс
+            <span style={{ fontSize: '10px', color: '#6B8FAA', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Баланс
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleToggleVisibility}
-              className="text-text-secondary hover:text-text-primary transition-colors p-1"
-            >
+          <div className="flex items-center gap-2">
+            <button onClick={handleToggleVisibility} className="p-1 active:opacity-60 transition-opacity">
               {isBalanceHidden ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#90ABBD" strokeWidth="2" strokeLinecap="round">
                   <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
                   <line x1="1" y1="1" x2="23" y2="23"/>
                 </svg>
               ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#90ABBD" strokeWidth="2" strokeLinecap="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
               )}
             </button>
-            <button
-              onClick={handleRefresh}
-              className="text-text-secondary hover:text-text-primary transition-colors p-1"
-            >
+            <button onClick={handleRefresh} className="p-1 active:opacity-60 transition-opacity">
               <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+                width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="#90ABBD" strokeWidth="2"
                 className={isLoading ? 'animate-spin' : ''}
               >
                 <polyline points="23 4 23 10 17 10"/>
@@ -104,17 +94,17 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
         {isLoading ? (
           <div className="space-y-2">
             <div
-              className="h-10 w-48 rounded-lg"
+              className="h-10 w-44 rounded-lg"
               style={{
-                background: 'linear-gradient(90deg, rgba(24,54,80,0.05) 25%, rgba(24,54,80,0.1) 50%, rgba(24,54,80,0.05) 75%)',
+                background: 'linear-gradient(90deg, rgba(24,54,80,0.05) 25%, rgba(24,54,80,0.09) 50%, rgba(24,54,80,0.05) 75%)',
                 backgroundSize: '200% 100%',
                 animation: 'shimmer 1.5s infinite',
               }}
             />
             <div
-              className="h-5 w-32 rounded-lg"
+              className="h-4 w-28 rounded"
               style={{
-                background: 'linear-gradient(90deg, rgba(24,54,80,0.05) 25%, rgba(24,54,80,0.1) 50%, rgba(24,54,80,0.05) 75%)',
+                background: 'linear-gradient(90deg, rgba(24,54,80,0.04) 25%, rgba(24,54,80,0.07) 50%, rgba(24,54,80,0.04) 75%)',
                 backgroundSize: '200% 100%',
                 animation: 'shimmer 1.5s infinite',
               }}
@@ -122,57 +112,42 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
           </div>
         ) : (
           <>
-            <div className="mb-1">
+            {/* Main: USDT amount */}
+            <div className="mb-1 flex items-baseline gap-2">
               <span
-                className="text-4xl font-bold text-text-primary tracking-tight"
-                style={{ fontVariantNumeric: 'tabular-nums' }}
-              >
-                {isBalanceHidden
-                  ? '₽ •••••'
-                  : `₽ ${formatNumber(balance?.total || 0, 2)}`}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-text-secondary text-sm">
-                {isBalanceHidden
-                  ? '≈ ••••• USDT'
-                  : `≈ ${formatNumber(usdtBalance?.amount || 0, 2)} USDT`}
-              </span>
-              {!isBalanceHidden && usdtBalance && (
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded-md font-medium"
-                  style={{
-                    background: 'rgba(0, 184, 148, 0.15)',
-                    color: '#00B894',
-                  }}
-                >
-                  TRC-20
-                </span>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Token pills */}
-        {!isLoading && balance?.balances && balance.balances.length > 0 && (
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {balance.balances.map((token) => (
-              <div
-                key={token.currency}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
                 style={{
-                  background: 'rgba(79,142,196,0.08)',
-                  border: '1px solid rgba(79,142,196,0.2)',
+                  fontSize: '38px',
+                  fontWeight: 700,
+                  color: '#183650',
+                  letterSpacing: '-0.04em',
+                  fontVariantNumeric: 'tabular-nums',
+                  lineHeight: 1,
                 }}
               >
-                <div className="w-1.5 h-1.5 rounded-full bg-accent-cyan" />
-                <span className="text-text-secondary text-xs">
-                  {isBalanceHidden ? `•••` : `${formatNumber(token.amount, 2)}`}{' '}
-                  <span className="text-text-primary">{token.symbol}</span>
-                </span>
-              </div>
-            ))}
-          </div>
+                {isBalanceHidden ? '••••••' : formatNumber(usdtAmount, 2)}
+              </span>
+              <span style={{ fontSize: '16px', fontWeight: 600, color: '#4F8EC4' }}>USDT</span>
+            </div>
+
+            {/* Sub: USD equivalent */}
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: '13px', color: '#90ABBD' }}>
+                {isBalanceHidden ? '≈ $•••••' : `≈ $${formatNumber(usdtAmount, 2)}`}
+              </span>
+              <span
+                style={{
+                  fontSize: '10px',
+                  background: 'rgba(0,184,148,0.12)',
+                  color: '#00A87A',
+                  borderRadius: '6px',
+                  padding: '2px 6px',
+                  fontWeight: 600,
+                }}
+              >
+                TRC-20
+              </span>
+            </div>
+          </>
         )}
       </div>
 

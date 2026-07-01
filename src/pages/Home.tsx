@@ -179,9 +179,14 @@ const Home: React.FC = () => {
                     }}
                   >
                     {token.icon ? (
-                      <img src={token.icon} alt={token.symbol} className="w-10 h-10 rounded-full" />
+                      <img
+                        src={token.icon}
+                        alt={token.symbol}
+                        className="w-10 h-10 rounded-full"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
                     ) : (
-                      token.symbol.charAt(0)
+                      token.symbol === 'USDT' ? '$' : token.symbol.charAt(0)
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
