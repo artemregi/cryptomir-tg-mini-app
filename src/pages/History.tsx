@@ -38,7 +38,6 @@ const History: React.FC = () => {
     }
   }, [handleBack])
 
-  // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -54,7 +53,6 @@ const History: React.FC = () => {
 
   const allTransactions = data?.pages.flatMap((page) => page.transactions ?? page.items ?? []) || []
 
-  // Group by date
   const groupedTransactions = allTransactions.reduce<Record<string, Transaction[]>>(
     (groups, tx) => {
       const group = formatDateGroup(tx.date || tx.created_at || '')
@@ -73,19 +71,17 @@ const History: React.FC = () => {
   const handleTxClick = (tx: Transaction) => {
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light')
     if (tx.tx_hash) {
-      window.Telegram?.WebApp?.openLink(
-        `https://tronscan.org/#/transaction/${tx.tx_hash}`
-      )
+      window.Telegram?.WebApp?.openLink(`https://tronscan.org/#/transaction/${tx.tx_hash}`)
     }
   }
 
   return (
-    <div className="min-h-screen pb-24 animate-fade-in" style={{ background: '#E4F3FB' }}>
+    <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#E4F3FB' }}>
       {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div
-          className="absolute -top-10 right-0 w-48 h-48 rounded-full opacity-8"
-          style={{ background: 'radial-gradient(circle, #4F8EC4 0%, transparent 70%)', filter: 'blur(50px)' }}
+          className="absolute -top-10 right-0 w-48 h-48 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(79,142,196,0.07) 0%, transparent 70%)', filter: 'blur(50px)' }}
         />
       </div>
 
@@ -95,39 +91,45 @@ const History: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={handleBack}
-              className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity flex-shrink-0"
-              style={{ background: '#FFFFFF', border: '1px solid #BDDCF2' }}
+              className="active:opacity-70 transition-opacity flex-shrink-0"
+              style={{
+                background: '#FFFFFF',
+                borderRadius: '12px',
+                padding: '7px 10px',
+                boxShadow: '0 1px 6px rgba(24,54,80,0.08)',
+              }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#183650" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6"/>
               </svg>
             </button>
             <div>
-              <h1 className="text-text-primary text-2xl font-bold">История</h1>
-              <p className="text-text-secondary text-sm">
+              <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#183650', letterSpacing: '-0.02em', lineHeight: 1.1 }}>История</h1>
+              <p style={{ fontSize: '11px', color: '#6B8FAA', fontWeight: 500 }}>
                 {allTransactions.length > 0 ? `${allTransactions.length} транзакций` : 'Операции'}
               </p>
             </div>
           </div>
           <button
             onClick={() => refetch()}
-            className="w-9 h-9 rounded-xl flex items-center justify-center active:opacity-70 transition-opacity"
-            style={{ background: '#FFFFFF', border: '1px solid #BDDCF2' }}
+            className="active:opacity-70 transition-opacity"
+            style={{
+              width: 34, height: 34, background: '#FFFFFF', borderRadius: '11px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 1px 6px rgba(24,54,80,0.08)',
+            }}
           >
-            <svg
-              width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B8FAA" strokeWidth="2"
-              className={isLoading ? 'animate-spin' : ''}
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B8FAA" strokeWidth="2" className={isLoading ? 'animate-spin' : ''}>
               <polyline points="23 4 23 10 17 10"/>
               <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
             </svg>
           </button>
         </div>
 
-        {/* Filter tabs */}
+        {/* Filter tabs — floating card style */}
         <div
-          className="flex gap-1 p-1 rounded-xl mb-5"
-          style={{ background: '#DCEFF9', border: '1px solid #BDDCF2' }}
+          className="flex gap-1.5 p-1.5 rounded-2xl mb-5"
+          style={{ background: '#FFFFFF', boxShadow: '0 1px 8px rgba(24,54,80,0.07)' }}
         >
           {[
             { key: 'all' as FilterType, label: 'Все' },
@@ -137,11 +139,11 @@ const History: React.FC = () => {
             <button
               key={key}
               onClick={() => handleFilterChange(key)}
-              className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
+              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
               style={{
                 background: filter === key ? '#4F8EC4' : 'transparent',
                 color: filter === key ? '#FFFFFF' : '#6B8FAA',
-                boxShadow: filter === key ? '0 2px 10px rgba(79,142,196,0.25)' : 'none',
+                boxShadow: filter === key ? '0 2px 8px rgba(79,142,196,0.3)' : 'none',
               }}
             >
               {label}
@@ -169,19 +171,16 @@ const History: React.FC = () => {
         {/* Error state */}
         {error && !isLoading && (
           <div
-            className="rounded-xl p-6 text-center"
-            style={{ background: '#FFFFFF', border: '1px solid rgba(225,112,85,0.2)' }}
+            className="rounded-2xl p-6 text-center"
+            style={{ background: '#FFFFFF', boxShadow: '0 2px 12px rgba(225,112,85,0.08)' }}
           >
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E17055" strokeWidth="2" className="mx-auto mb-3">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="12"/>
               <line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <p className="text-text-secondary text-sm mb-3">Не удалось загрузить транзакции</p>
-            <button
-              onClick={() => refetch()}
-              className="text-accent-purple text-sm font-medium"
-            >
+            <p style={{ fontSize: '13px', color: '#6B8FAA', marginBottom: '12px' }}>Не удалось загрузить транзакции</p>
+            <button onClick={() => refetch()} style={{ fontSize: '13px', color: '#4F8EC4', fontWeight: 600 }}>
               Попробовать снова
             </button>
           </div>
@@ -192,20 +191,18 @@ const History: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-16">
             <div
               className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: '#FFFFFF', border: '1px solid #BDDCF2' }}
+              style={{ background: '#FFFFFF', boxShadow: '0 2px 12px rgba(24,54,80,0.06)' }}
             >
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#90ABBD" strokeWidth="2">
                 <rect x="2" y="5" width="20" height="14" rx="2"/>
                 <line x1="2" y1="10" x2="22" y2="10"/>
               </svg>
             </div>
-            <p className="text-text-secondary font-semibold mb-1">
+            <p style={{ color: '#6B8FAA', fontWeight: 600, marginBottom: '4px' }}>
               {filter === 'all' ? 'Нет транзакций' : filter === 'send' ? 'Нет отправлений' : 'Нет пополнений'}
             </p>
-            <p className="text-text-muted text-sm text-center">
-              {filter === 'all'
-                ? 'Ваши транзакции появятся здесь'
-                : 'Попробуйте изменить фильтр'}
+            <p style={{ fontSize: '12px', color: '#90ABBD', textAlign: 'center' }}>
+              {filter === 'all' ? 'Ваши транзакции появятся здесь' : 'Попробуйте изменить фильтр'}
             </p>
           </div>
         )}
@@ -213,11 +210,14 @@ const History: React.FC = () => {
         {/* Grouped transactions */}
         {!isLoading && !error && Object.entries(groupedTransactions).map(([group, txs]) => (
           <div key={group} className="mb-4">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-text-muted text-xs font-medium uppercase tracking-wider">
+            {/* Date divider */}
+            <div className="flex items-center gap-2 mb-2">
+              <span style={{ fontSize: '10px', fontWeight: 600, color: '#8AA5BA', textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>
                 {group}
               </span>
-              <div className="flex-1 h-px" style={{ background: '#BDDCF2' }} />
+              <div
+                style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(189,220,242,0.8), transparent)' }}
+              />
             </div>
             <div className="space-y-2">
               {txs.map((tx) => (
@@ -231,27 +231,24 @@ const History: React.FC = () => {
           </div>
         ))}
 
-        {/* Load more trigger */}
         <div ref={loadMoreRef} className="h-4" />
 
-        {/* Loading more indicator */}
         {isFetchingNextPage && (
           <div className="flex justify-center py-4">
             <div className="flex gap-1.5">
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-accent-purple"
-                  style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: '#4F8EC4', animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* No more data */}
         {!hasNextPage && allTransactions.length > 10 && (
-          <p className="text-center text-text-muted text-xs py-4">
+          <p style={{ textAlign: 'center', fontSize: '11px', color: '#90ABBD', paddingTop: '12px', paddingBottom: '4px' }}>
             Все транзакции загружены
           </p>
         )}

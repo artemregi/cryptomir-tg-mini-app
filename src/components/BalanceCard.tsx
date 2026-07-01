@@ -26,51 +26,27 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
   )
 
   return (
-    <div className="relative mx-4 rounded-2xl overflow-hidden" style={{ minHeight: '180px' }}>
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: '#FFFFFF',
-        }}
-      />
-
+    <div
+      className="relative mx-4 rounded-2xl overflow-hidden"
+      style={{
+        minHeight: '160px',
+        background: 'linear-gradient(145deg, #FFFFFF 0%, #F4F9FD 100%)',
+        boxShadow: '0 4px 28px rgba(79,142,196,0.14), 0 1px 6px rgba(24,54,80,0.06)',
+      }}
+    >
       {/* Decorative orbs */}
       <div
-        className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20"
+        className="absolute -top-8 -right-8 w-40 h-40 rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, #4F8EC4 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(77,180,234,0.18) 0%, transparent 70%)',
           filter: 'blur(20px)',
         }}
       />
       <div
-        className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full opacity-15"
+        className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, #4DB4EA 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(79,142,196,0.12) 0%, transparent 70%)',
           filter: 'blur(20px)',
-        }}
-      />
-
-      {/* Grid pattern */}
-      <div
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(79,142,196,0.5) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(79,142,196,0.5) 1px, transparent 1px)
-          `,
-          backgroundSize: '30px 30px',
-        }}
-      />
-
-      {/* Border */}
-      <div
-        className="absolute inset-0 rounded-2xl"
-        style={{
-          border: '1px solid transparent',
-          backgroundImage: 'linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, #4F8EC4, #4DB4EA)',
-          backgroundOrigin: 'border-box',
-          backgroundClip: 'padding-box, border-box',
         }}
       />
 

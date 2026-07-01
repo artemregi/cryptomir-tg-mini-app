@@ -152,7 +152,7 @@ const Send: React.FC = () => {
           <button
             onClick={() => { setStep('form'); setAddress(''); setAmount('') }}
             className="flex-1 py-3.5 rounded-xl font-semibold text-text-primary transition-opacity active:opacity-70"
-            style={{ background: '#DCEFF9', border: '1px solid #BDDCF2' }}
+            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
           >
             Ещё раз
           </button>
@@ -192,7 +192,7 @@ const Send: React.FC = () => {
           <button
             onClick={() => setStep('form')}
             className="flex-1 py-3.5 rounded-xl font-semibold text-text-primary"
-            style={{ background: '#DCEFF9', border: '1px solid #BDDCF2' }}
+            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
           >
             Назад
           </button>
@@ -215,7 +215,7 @@ const Send: React.FC = () => {
         <h1 className="text-text-primary text-2xl font-bold mb-2">Подтверждение</h1>
         <p className="text-text-secondary text-sm mb-6">Проверьте детали перевода</p>
 
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid #BDDCF2' }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ boxShadow: '0 2px 16px rgba(24,54,80,0.08)' }}>
           {[
             { label: 'Получатель', value: address, mono: true, truncate: true },
             { label: 'Сумма', value: `${formatNumber(amountNum, 2)} USDT` },
@@ -227,7 +227,7 @@ const Send: React.FC = () => {
               className="flex items-start justify-between p-4"
               style={{
                 background: '#FFFFFF',
-                borderBottom: i < arr.length - 1 ? '1px solid #BDDCF2' : 'none',
+                borderBottom: i < arr.length - 1 ? '1px solid rgba(189,220,242,0.6)' : 'none',
               }}
             >
               <span className="text-text-secondary text-sm">{label}</span>
@@ -258,7 +258,7 @@ const Send: React.FC = () => {
           <button
             onClick={() => setStep('form')}
             className="flex-1 py-4 rounded-xl font-semibold text-text-primary active:opacity-70 transition-opacity"
-            style={{ background: '#DCEFF9', border: '1px solid #BDDCF2' }}
+            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
           >
             Отмена
           </button>
@@ -300,13 +300,27 @@ const Send: React.FC = () => {
       </div>
 
       <div className="relative z-10">
-        <h1 className="text-text-primary text-2xl font-bold mb-1">Отправить</h1>
-        <p className="text-text-secondary text-sm mb-6">Перевод USDT в сети TRON (TRC-20)</p>
+        {/* Header with back */}
+        <div className="flex items-center gap-3 mb-5">
+          <button
+            onClick={handleBack}
+            className="active:opacity-70 transition-opacity flex-shrink-0"
+            style={{ background: '#FFFFFF', borderRadius: '12px', padding: '7px 10px', boxShadow: '0 1px 6px rgba(24,54,80,0.08)' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#183650', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Отправить</h1>
+            <p style={{ fontSize: '11px', color: '#6B8FAA', fontWeight: 500 }}>USDT · TRC-20</p>
+          </div>
+        </div>
 
         {/* Balance indicator */}
         <div
           className="flex items-center justify-between p-3.5 rounded-xl mb-5"
-          style={{ background: '#FFFFFF', border: '1px solid #BDDCF2' }}
+          style={{ background: '#FFFFFF', boxShadow: '0 1px 8px rgba(24,54,80,0.07)' }}
         >
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: '#00B894', boxShadow: '0 0 6px #00B894' }} />
@@ -331,7 +345,11 @@ const Send: React.FC = () => {
               className="w-full px-4 py-3.5 rounded-xl font-mono text-sm text-text-primary placeholder-text-muted resize-none outline-none transition-all"
               style={{
                 background: '#FFFFFF',
-                border: `1px solid ${addressError ? '#E17055' : address && !addressError ? '#00B894' : '#BDDCF2'}`,
+                boxShadow: addressError
+                  ? '0 0 0 1.5px #E17055, 0 1px 8px rgba(225,112,85,0.08)'
+                  : address && !addressError
+                  ? '0 0 0 1.5px #00B894, 0 1px 8px rgba(0,184,148,0.08)'
+                  : '0 1px 8px rgba(24,54,80,0.07)',
                 caretColor: '#4F8EC4',
               }}
             />
@@ -372,7 +390,11 @@ const Send: React.FC = () => {
               className="w-full px-4 py-4 rounded-xl text-2xl font-bold text-text-primary placeholder-text-muted outline-none transition-all"
               style={{
                 background: '#FFFFFF',
-                border: `1px solid ${amountError ? '#E17055' : amount && !amountError ? '#4F8EC4' : '#BDDCF2'}`,
+                boxShadow: amountError
+                  ? '0 0 0 1.5px #E17055, 0 1px 8px rgba(225,112,85,0.08)'
+                  : amount && !amountError
+                  ? '0 0 0 1.5px #4F8EC4, 0 1px 8px rgba(79,142,196,0.08)'
+                  : '0 1px 8px rgba(24,54,80,0.07)',
                 caretColor: '#4F8EC4',
               }}
             />
@@ -396,7 +418,7 @@ const Send: React.FC = () => {
         {amountNum > 0 && !amountError && (
           <div
             className="rounded-xl p-4 mb-5 space-y-2.5"
-            style={{ background: '#FFFFFF', border: '1px solid #BDDCF2' }}
+            style={{ background: '#FFFFFF', boxShadow: '0 1px 8px rgba(24,54,80,0.07)' }}
           >
             <div className="flex justify-between text-sm">
               <span className="text-text-secondary">Сумма перевода</span>
@@ -408,7 +430,7 @@ const Send: React.FC = () => {
             </div>
             <div
               className="flex justify-between text-sm font-bold pt-2"
-              style={{ borderTop: '1px solid #BDDCF2' }}
+              style={{ borderTop: '1px solid rgba(189,220,242,0.6)' }}
             >
               <span className="text-text-secondary">Итого спишется</span>
               <span className="text-text-primary">{formatNumber(totalDeducted, 2)} USDT</span>
