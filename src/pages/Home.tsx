@@ -109,8 +109,9 @@ const Home: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+              className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer active:opacity-70"
               style={{ background: 'linear-gradient(135deg,#BFDBFE,#93C5FD)' }}
+              onClick={() => navigate('/profile')}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="4"/>

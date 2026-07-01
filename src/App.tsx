@@ -7,6 +7,11 @@ import Home from './pages/Home'
 import Send from './pages/Send'
 import Receive from './pages/Receive'
 import History from './pages/History'
+import Profile from './pages/Profile'
+import KYC from './pages/KYC'
+import Card from './pages/Card'
+import Exchange from './pages/Exchange'
+import { LanguageProvider } from './contexts/LanguageContext'
 import { initializeProfile } from './api/endpoints'
 
 const App: React.FC = () => {
@@ -58,23 +63,29 @@ const App: React.FC = () => {
   }
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        background: '#0A0B0E',
-        maxWidth: '430px',
-        margin: '0 auto',
-      }}
-    >
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/send" element={<Send />} />
-        <Route path="/receive" element={<Receive />} />
-        <Route path="/history" element={<History />} />
-      </Routes>
+    <LanguageProvider>
+      <div
+        className="min-h-screen relative"
+        style={{
+          background: '#F0F4FA',
+          maxWidth: '430px',
+          margin: '0 auto',
+        }}
+      >
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/send" element={<Send />} />
+          <Route path="/receive" element={<Receive />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/kyc" element={<KYC />} />
+          <Route path="/card" element={<Card />} />
+          <Route path="/exchange" element={<Exchange />} />
+        </Routes>
 
-      <BottomNav />
-    </div>
+        <BottomNav />
+      </div>
+    </LanguageProvider>
   )
 }
 

@@ -16,32 +16,32 @@ const BottomNav: React.FC = () => {
       ),
     },
     {
-      path: '/send',
-      label: 'Отправить',
-      icon: (active: boolean) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'rgba(37,99,235,0.1)' : 'none'} stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"/>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-      ),
-    },
-    {
-      path: '/receive',
-      label: 'Получить',
-      icon: (active: boolean) => (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'rgba(37,99,235,0.08)' : 'none'} stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2v14M12 16l-5-5M12 16l5-5"/>
-          <path d="M2 20h20"/>
-        </svg>
-      ),
-    },
-    {
-      path: '/history',
-      label: 'История',
+      path: '/card',
+      label: 'Карта',
       icon: (active: boolean) => (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+          <line x1="1" y1="10" x2="23" y2="10"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/exchange',
+      label: 'Обмен',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/profile',
+      label: 'Профиль',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
         </svg>
       ),
     },
