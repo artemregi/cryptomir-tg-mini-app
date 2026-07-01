@@ -37,7 +37,6 @@ const Send: React.FC = () => {
   )
   const availableBalance = usdtBalance?.amount || 0
 
-  // Back button
   const handleBack = useCallback(() => {
     if (step === 'confirm') {
       setStep('form')
@@ -123,43 +122,39 @@ const Send: React.FC = () => {
   // Success screen
   if (step === 'success') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-fade-in" style={{ background: '#E4F3FB' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-fade-in" style={{ background: '#F0F4FA' }}>
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-          style={{
-            background: 'rgba(0, 184, 148, 0.15)',
-            border: '2px solid rgba(0, 184, 148, 0.4)',
-            boxShadow: '0 0 40px rgba(0,184,148,0.15)',
-          }}
+          style={{ background: '#ECFDF5', border: '2px solid #A7F3D0' }}
         >
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00B894" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h2 className="text-text-primary text-2xl font-bold mb-2">Отправлено!</h2>
-        <p className="text-text-secondary text-center text-sm mb-1">
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: 8 }}>Отправлено!</h2>
+        <p style={{ fontSize: '14px', color: '#6B7280', textAlign: 'center', marginBottom: 4 }}>
           {formatNumber(amountNum, 2)} USDT отправлены на адрес
         </p>
-        <p className="text-text-muted text-xs font-mono text-center mb-8 break-all px-4">
+        <p style={{ fontSize: '12px', color: '#9CA3AF', fontFamily: 'monospace', textAlign: 'center', marginBottom: 32, wordBreak: 'break-all', padding: '0 16px' }}>
           {address}
         </p>
         {withdrawalId && (
-          <p className="text-text-muted text-xs mb-6">
-            ID транзакции: <span className="text-text-secondary font-mono">{withdrawalId.slice(0, 12)}...</span>
+          <p style={{ fontSize: '12px', color: '#9CA3AF', marginBottom: 24 }}>
+            ID: <span style={{ color: '#6B7280', fontFamily: 'monospace' }}>{withdrawalId.slice(0, 12)}...</span>
           </p>
         )}
         <div className="flex gap-3 w-full">
           <button
             onClick={() => { setStep('form'); setAddress(''); setAmount('') }}
-            className="flex-1 py-3.5 rounded-xl font-semibold text-text-primary transition-opacity active:opacity-70"
-            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
+            className="flex-1 py-4 rounded-2xl font-semibold transition-opacity active:opacity-70"
+            style={{ background: '#F3F4F6', color: '#374151', fontSize: '15px' }}
           >
             Ещё раз
           </button>
           <button
             onClick={() => navigate('/')}
-            className="flex-1 py-3.5 rounded-xl font-semibold text-white transition-opacity active:opacity-70"
-            style={{ background: 'linear-gradient(135deg, #4F8EC4 0%, #5FA0D4 100%)' }}
+            className="flex-1 py-4 rounded-2xl font-semibold text-white transition-opacity active:opacity-70"
+            style={{ background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: '15px' }}
           >
             На главную
           </button>
@@ -171,35 +166,31 @@ const Send: React.FC = () => {
   // Error screen
   if (step === 'error') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-fade-in" style={{ background: '#E4F3FB' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-fade-in" style={{ background: '#F0F4FA' }}>
         <div
           className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
-          style={{
-            background: 'rgba(225, 112, 85, 0.15)',
-            border: '2px solid rgba(225, 112, 85, 0.4)',
-            boxShadow: '0 0 40px rgba(225,112,85,0.15)',
-          }}
+          style={{ background: '#FEF2F2', border: '2px solid #FECACA' }}
         >
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#E17055" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <line x1="15" y1="9" x2="9" y2="15"/>
             <line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
         </div>
-        <h2 className="text-text-primary text-2xl font-bold mb-2">Ошибка</h2>
-        <p className="text-text-secondary text-center text-sm mb-8">{errorMsg}</p>
+        <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginBottom: 8 }}>Ошибка</h2>
+        <p style={{ fontSize: '14px', color: '#6B7280', textAlign: 'center', marginBottom: 32 }}>{errorMsg}</p>
         <div className="flex gap-3 w-full">
           <button
             onClick={() => setStep('form')}
-            className="flex-1 py-3.5 rounded-xl font-semibold text-text-primary"
-            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
+            className="flex-1 py-4 rounded-2xl font-semibold transition-opacity active:opacity-70"
+            style={{ background: '#F3F4F6', color: '#374151', fontSize: '15px' }}
           >
             Назад
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-3.5 rounded-xl font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg, #4F8EC4 0%, #5FA0D4 100%)' }}
+            className="flex-1 py-4 rounded-2xl font-semibold text-white transition-opacity active:opacity-70"
+            style={{ background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: '15px' }}
           >
             Повторить
           </button>
@@ -211,11 +202,11 @@ const Send: React.FC = () => {
   // Confirm screen
   if (step === 'confirm') {
     return (
-      <div className="min-h-screen flex flex-col px-4 pt-6 pb-24 animate-fade-in" style={{ background: '#E4F3FB' }}>
-        <h1 className="text-text-primary text-2xl font-bold mb-2">Подтверждение</h1>
-        <p className="text-text-secondary text-sm mb-6">Проверьте детали перевода</p>
+      <div className="min-h-screen flex flex-col px-4 pt-6 pb-24 animate-fade-in" style={{ background: '#F0F4FA' }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: 6 }}>Подтверждение</h1>
+        <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: 24 }}>Проверьте детали перевода</p>
 
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ boxShadow: '0 2px 16px rgba(24,54,80,0.08)' }}>
+        <div className="rounded-2xl overflow-hidden mb-4" style={{ border: '1px solid #F3F4F6' }}>
           {[
             { label: 'Получатель', value: address, mono: true, truncate: true },
             { label: 'Сумма', value: `${formatNumber(amountNum, 2)} USDT` },
@@ -227,12 +218,21 @@ const Send: React.FC = () => {
               className="flex items-start justify-between p-4"
               style={{
                 background: '#FFFFFF',
-                borderBottom: i < arr.length - 1 ? '1px solid rgba(189,220,242,0.6)' : 'none',
+                borderBottom: i < arr.length - 1 ? '1px solid #F3F4F6' : 'none',
               }}
             >
-              <span className="text-text-secondary text-sm">{label}</span>
+              <span style={{ fontSize: '14px', color: '#6B7280' }}>{label}</span>
               <span
-                className={`text-sm ml-4 ${mono ? 'font-mono' : ''} ${bold ? 'font-bold text-text-primary' : 'text-text-primary'} ${truncate ? 'break-all text-right max-w-[180px]' : ''}`}
+                style={{
+                  fontSize: '14px',
+                  marginLeft: 16,
+                  fontFamily: mono ? 'monospace' : undefined,
+                  fontWeight: bold ? 700 : 500,
+                  color: '#111827',
+                  wordBreak: truncate ? 'break-all' : undefined,
+                  textAlign: 'right',
+                  maxWidth: truncate ? 180 : undefined,
+                }}
               >
                 {value}
               </span>
@@ -241,15 +241,15 @@ const Send: React.FC = () => {
         </div>
 
         <div
-          className="rounded-xl p-3.5 mb-6 flex items-start gap-2.5"
-          style={{ background: 'rgba(225,112,85,0.08)', border: '1px solid rgba(225,112,85,0.2)' }}
+          className="rounded-2xl p-4 mb-6 flex items-start gap-3"
+          style={{ background: '#FFFBEB', border: '1px solid #FDE68A' }}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E17055" strokeWidth="2" className="flex-shrink-0 mt-0.5">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="8" x2="12" y2="12"/>
-            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" className="flex-shrink-0 mt-0.5">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          <p className="text-xs" style={{ color: '#E17055' }}>
+          <p style={{ fontSize: '13px', color: '#92400E' }}>
             Транзакции в сети TRON необратимы. Убедитесь в правильности адреса.
           </p>
         </div>
@@ -257,18 +257,19 @@ const Send: React.FC = () => {
         <div className="flex gap-3 mt-auto">
           <button
             onClick={() => setStep('form')}
-            className="flex-1 py-4 rounded-xl font-semibold text-text-primary active:opacity-70 transition-opacity"
-            style={{ background: '#EAF4FB', boxShadow: '0 1px 4px rgba(24,54,80,0.06)' }}
+            className="flex-1 py-4 rounded-2xl font-semibold transition-opacity active:opacity-70"
+            style={{ background: '#F3F4F6', color: '#374151', fontSize: '15px' }}
           >
             Отмена
           </button>
           <button
             onClick={handleConfirm}
             disabled={withdrawMutation.isPending}
-            className="flex-1 py-4 rounded-xl font-bold text-white active:scale-95 transition-transform disabled:opacity-60"
+            className="flex-1 py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform disabled:opacity-60"
             style={{
-              background: 'linear-gradient(135deg, #4F8EC4 0%, #5FA0D4 100%)',
-              boxShadow: '0 4px 20px rgba(79,142,196,0.3)',
+              background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+              boxShadow: '0 6px 20px rgba(37,99,235,0.35)',
+              fontSize: '15px',
             }}
           >
             {withdrawMutation.isPending ? (
@@ -290,171 +291,160 @@ const Send: React.FC = () => {
 
   // Main form
   return (
-    <div className="min-h-screen flex flex-col px-4 pt-6 pb-24 animate-fade-in" style={{ background: '#E4F3FB' }}>
-      {/* Ambient */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #4F8EC4 0%, transparent 70%)', filter: 'blur(40px)' }}
-        />
-      </div>
-
-      <div className="relative z-10">
-        {/* Header with back */}
-        <div className="flex items-center gap-3 mb-5">
-          <button
-            onClick={handleBack}
-            className="active:opacity-70 transition-opacity flex-shrink-0"
-            style={{ background: '#FFFFFF', borderRadius: '12px', padding: '7px 10px', boxShadow: '0 1px 6px rgba(24,54,80,0.08)' }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div>
-            <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#183650', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Отправить</h1>
-            <p style={{ fontSize: '11px', color: '#6B8FAA', fontWeight: 500 }}>USDT · TRC-20</p>
-          </div>
-        </div>
-
-        {/* Balance indicator */}
-        <div
-          className="flex items-center justify-between p-3.5 rounded-xl mb-5"
-          style={{ background: '#FFFFFF', boxShadow: '0 1px 8px rgba(24,54,80,0.07)' }}
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ background: '#00B894', boxShadow: '0 0 6px #00B894' }} />
-            <span className="text-text-secondary text-sm">Доступно</span>
-          </div>
-          <span className="text-text-primary font-bold">
-            {formatNumber(availableBalance, 2)} <span className="text-text-secondary font-normal">USDT</span>
-          </span>
-        </div>
-
-        {/* Address input */}
-        <div className="mb-4">
-          <label className="block text-text-secondary text-xs font-medium mb-2 tracking-wider uppercase">
-            TRON адрес получателя
-          </label>
-          <div className="relative">
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value.trim())}
-              placeholder="T..."
-              rows={2}
-              className="w-full px-4 py-3.5 rounded-xl font-mono text-sm text-text-primary placeholder-text-muted resize-none outline-none transition-all"
-              style={{
-                background: '#FFFFFF',
-                boxShadow: addressError
-                  ? '0 0 0 1.5px #E17055, 0 1px 8px rgba(225,112,85,0.08)'
-                  : address && !addressError
-                  ? '0 0 0 1.5px #00B894, 0 1px 8px rgba(0,184,148,0.08)'
-                  : '0 1px 8px rgba(24,54,80,0.07)',
-                caretColor: '#4F8EC4',
-              }}
-            />
-            {address && (
-              <button
-                onClick={() => setAddress('')}
-                className="absolute top-3 right-3 text-text-muted hover:text-text-primary transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/>
-                  <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            )}
-          </div>
-          {addressError && (
-            <p className="mt-1.5 text-xs" style={{ color: '#E17055' }}>{addressError}</p>
-          )}
-          {address && !addressError && (
-            <p className="mt-1.5 text-xs" style={{ color: '#00B894' }}>
-              Адрес действителен ✓
-            </p>
-          )}
-        </div>
-
-        {/* Amount input */}
-        <div className="mb-5">
-          <label className="block text-text-secondary text-xs font-medium mb-2 tracking-wider uppercase">
-            Сумма USDT
-          </label>
-          <div className="relative">
-            <input
-              type="number"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-4 py-4 rounded-xl text-2xl font-bold text-text-primary placeholder-text-muted outline-none transition-all"
-              style={{
-                background: '#FFFFFF',
-                boxShadow: amountError
-                  ? '0 0 0 1.5px #E17055, 0 1px 8px rgba(225,112,85,0.08)'
-                  : amount && !amountError
-                  ? '0 0 0 1.5px #4F8EC4, 0 1px 8px rgba(79,142,196,0.08)'
-                  : '0 1px 8px rgba(24,54,80,0.07)',
-                caretColor: '#4F8EC4',
-              }}
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <button
-                onClick={handleSetMax}
-                className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                style={{ background: 'rgba(79,142,196,0.15)', color: '#4F8EC4' }}
-              >
-                MAX
-              </button>
-              <span className="text-text-secondary text-sm font-medium">USDT</span>
-            </div>
-          </div>
-          {amountError && (
-            <p className="mt-1.5 text-xs" style={{ color: '#E17055' }}>{amountError}</p>
-          )}
-        </div>
-
-        {/* Fee info */}
-        {amountNum > 0 && !amountError && (
-          <div
-            className="rounded-xl p-4 mb-5 space-y-2.5"
-            style={{ background: '#FFFFFF', boxShadow: '0 1px 8px rgba(24,54,80,0.07)' }}
-          >
-            <div className="flex justify-between text-sm">
-              <span className="text-text-secondary">Сумма перевода</span>
-              <span className="text-text-primary">{formatNumber(amountNum, 2)} USDT</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-secondary">Комиссия сети</span>
-              <span className="text-text-primary">{formatNumber(fee, 2)} USDT</span>
-            </div>
-            <div
-              className="flex justify-between text-sm font-bold pt-2"
-              style={{ borderTop: '1px solid rgba(189,220,242,0.6)' }}
-            >
-              <span className="text-text-secondary">Итого спишется</span>
-              <span className="text-text-primary">{formatNumber(totalDeducted, 2)} USDT</span>
-            </div>
-          </div>
-        )}
-
-        {/* Submit button */}
+    <div className="min-h-screen flex flex-col px-4 pt-6 pb-24 animate-fade-in" style={{ background: '#F0F4FA' }}>
+      <div className="flex items-center gap-3 mb-6">
         <button
-          onClick={handleSubmitForm}
-          disabled={!isFormValid}
-          className="w-full py-4 rounded-xl font-bold text-white text-base transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{
-            background: isFormValid
-              ? 'linear-gradient(135deg, #4F8EC4 0%, #5FA0D4 100%)'
-              : '#DCEFF9',
-            boxShadow: isFormValid ? '0 4px 20px rgba(79,142,196,0.3)' : 'none',
-            border: isFormValid ? 'none' : '1px solid #BDDCF2',
-            color: isFormValid ? '#FFFFFF' : '#90ABBD',
-          }}
+          onClick={handleBack}
+          className="active:opacity-70 transition-opacity flex-shrink-0"
+          style={{ background: '#FFFFFF', borderRadius: '14px', padding: '8px 10px', border: '1px solid #F3F4F6' }}
         >
-          Продолжить
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
         </button>
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', letterSpacing: '-0.02em', lineHeight: 1.1 }}>Отправить</h1>
+          <p style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 500 }}>USDT · TRC-20</p>
+        </div>
       </div>
+
+      {/* Balance indicator */}
+      <div
+        className="flex items-center justify-between p-4 rounded-2xl mb-5"
+        style={{ background: '#FFFFFF', border: '1px solid #F3F4F6' }}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ background: '#059669', boxShadow: '0 0 6px #059669' }} />
+          <span style={{ fontSize: '14px', color: '#6B7280' }}>Доступно</span>
+        </div>
+        <span style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>
+          {formatNumber(availableBalance, 2)} <span style={{ fontWeight: 400, color: '#6B7280' }}>USDT</span>
+        </span>
+      </div>
+
+      {/* Address input */}
+      <div className="mb-4">
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6B7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          TRON адрес получателя
+        </label>
+        <div className="relative">
+          <textarea
+            value={address}
+            onChange={(e) => setAddress(e.target.value.trim())}
+            placeholder="T..."
+            rows={2}
+            className="w-full px-4 py-3.5 rounded-2xl font-mono text-sm resize-none outline-none transition-all"
+            style={{
+              background: '#F9FAFB',
+              border: addressError
+                ? '1.5px solid #DC2626'
+                : address && !addressError
+                ? '1.5px solid #059669'
+                : '1.5px solid #F3F4F6',
+              color: '#111827',
+              caretColor: '#2563EB',
+            }}
+          />
+          {address && (
+            <button
+              onClick={() => setAddress('')}
+              className="absolute top-3 right-3 transition-colors"
+              style={{ color: '#9CA3AF' }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          )}
+        </div>
+        {addressError && (
+          <p style={{ marginTop: 6, fontSize: '12px', color: '#DC2626' }}>{addressError}</p>
+        )}
+        {address && !addressError && (
+          <p style={{ marginTop: 6, fontSize: '12px', color: '#059669' }}>Адрес действителен ✓</p>
+        )}
+      </div>
+
+      {/* Amount input */}
+      <div className="mb-5">
+        <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#6B7280', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Сумма USDT
+        </label>
+        <div className="relative">
+          <input
+            type="number"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            className="w-full px-4 py-4 rounded-2xl outline-none transition-all"
+            style={{
+              background: '#F9FAFB',
+              border: amountError
+                ? '1.5px solid #DC2626'
+                : amount && !amountError
+                ? '1.5px solid #2563EB'
+                : '1.5px solid #F3F4F6',
+              fontSize: '28px',
+              fontWeight: 700,
+              color: '#111827',
+              caretColor: '#2563EB',
+            }}
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <button
+              onClick={handleSetMax}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl"
+              style={{ background: '#EFF6FF', color: '#2563EB' }}
+            >
+              MAX
+            </button>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: '#9CA3AF' }}>USDT</span>
+          </div>
+        </div>
+        {amountError && (
+          <p style={{ marginTop: 6, fontSize: '12px', color: '#DC2626' }}>{amountError}</p>
+        )}
+      </div>
+
+      {/* Fee info */}
+      {amountNum > 0 && !amountError && (
+        <div
+          className="rounded-2xl p-4 mb-5 space-y-3"
+          style={{ background: '#FFFFFF', border: '1px solid #F3F4F6' }}
+        >
+          <div className="flex justify-between">
+            <span style={{ fontSize: '14px', color: '#6B7280' }}>Сумма перевода</span>
+            <span style={{ fontSize: '14px', color: '#111827', fontWeight: 500 }}>{formatNumber(amountNum, 2)} USDT</span>
+          </div>
+          <div className="flex justify-between">
+            <span style={{ fontSize: '14px', color: '#6B7280' }}>Комиссия сети</span>
+            <span style={{ fontSize: '14px', color: '#111827', fontWeight: 500 }}>{formatNumber(fee, 2)} USDT</span>
+          </div>
+          <div
+            className="flex justify-between pt-3"
+            style={{ borderTop: '1px solid #F3F4F6' }}
+          >
+            <span style={{ fontSize: '14px', color: '#6B7280' }}>Итого спишется</span>
+            <span style={{ fontSize: '14px', color: '#111827', fontWeight: 700 }}>{formatNumber(totalDeducted, 2)} USDT</span>
+          </div>
+        </div>
+      )}
+
+      {/* Submit button */}
+      <button
+        onClick={handleSubmitForm}
+        disabled={!isFormValid}
+        className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+        style={{
+          background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+          boxShadow: isFormValid ? '0 6px 20px rgba(37,99,235,0.35)' : 'none',
+          fontSize: '16px',
+        }}
+      >
+        Продолжить
+      </button>
     </div>
   )
 }

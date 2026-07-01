@@ -1,667 +1,462 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CryptoMIR — Design Preview</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-  * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-  body { background: #05060A; }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CryptoMIR — Design Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+    body { background: #B8CDD9; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 24px 60px; gap: 24px; flex-wrap: wrap; }
 
-  .phone-frame {
-    width: 260px;
-    min-height: 520px;
-    border-radius: 36px;
-    background: #0A0B0E;
-    border: 1.5px solid #1E2030;
-    box-shadow: 0 0 0 6px #0D0E14, 0 0 0 7px #1E2030, 0 40px 80px rgba(0,0,0,0.7), 0 0 60px rgba(108,92,231,0.08);
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .phone-notch {
-    width: 80px; height: 20px;
-    background: #0D0E14;
-    border-radius: 0 0 12px 12px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 10;
-  }
-  .glow-purple { box-shadow: 0 0 40px rgba(108,92,231,0.15); }
-  .glow-cyan { box-shadow: 0 0 40px rgba(0,210,255,0.1); }
+    .phone {
+      width: 375px; height: 750px; background: #E4F3FB;
+      border-radius: 48px; position: relative; overflow: hidden;
+      box-shadow: 0 0 0 10px #1C2B38, 0 0 0 12px #2E404F, 0 40px 100px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.25);
+      flex-shrink: 0;
+    }
+    .phone-notch { position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#1C2B38;border-radius:0 0 20px 20px;z-index:100; }
+    .phone-screen { position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:40px;padding-bottom:90px;scrollbar-width:none; }
+    .phone-screen::-webkit-scrollbar { display:none; }
+    .phone-label { text-align:center;font-size:12px;font-weight:600;color:#4A6070;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px; }
 
-  .balance-card {
-    background: #13141A;
-    border-radius: 20px;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-    position: relative;
-  }
-  .balance-card::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 21px;
-    background: linear-gradient(135deg, rgba(108,92,231,0.5), rgba(0,210,255,0.3));
-    z-index: -1;
-  }
+    .card { background:#fff;border-radius:20px;box-shadow:0 2px 16px rgba(24,54,80,0.08),0 1px 4px rgba(24,54,80,0.04); }
 
-  .btn-action {
-    background: #13141A;
-    border-radius: 14px;
-    border: 1px solid #1E2030;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 6px;
-    flex: 1;
-  }
-  .token-row {
-    background: #13141A;
-    border-radius: 12px;
-    border: 1px solid #1E2030;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
-  }
-  .bottom-nav {
-    background: rgba(13,14,20,0.97);
-    border-top: 1px solid #1E2030;
-    display: flex;
-    padding: 8px 0 10px;
-  }
-  .nav-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-  }
-  .input-field {
-    background: #13141A;
-    border: 1px solid #1E2030;
-    border-radius: 12px;
-    padding: 11px 12px;
-    color: #fff;
-    font-size: 13px;
-    width: 100%;
-  }
-  .input-field::placeholder { color: #4A4F68; }
-  .filter-tab {
-    flex: 1;
-    text-align: center;
-    padding: 7px 4px;
-    border-radius: 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #8A8FA8;
-  }
-  .filter-tab.active {
-    background: #6C5CE7;
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(108,92,231,0.35);
-  }
-  .tx-row {
-    background: #13141A;
-    border-radius: 12px;
-    border: 1px solid #1E2030;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
-  }
+    .bottom-nav { position:absolute;bottom:0;left:0;right:0;padding:0 12px 16px;z-index:50; }
+    .bottom-nav-inner { background:rgba(242,249,254,0.94);backdrop-filter:blur(24px);border-radius:24px;padding:8px;box-shadow:0 -1px 0 rgba(189,220,242,0.5),0 4px 24px rgba(24,54,80,0.10);display:flex;align-items:center;justify-content:space-around; }
+    .nav-item { display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 14px;border-radius:16px;cursor:pointer; }
+    .nav-item.active { background:#4F8EC4;box-shadow:0 2px 10px rgba(79,142,196,0.35); }
+    .nav-item span { font-size:9px;font-weight:600;color:#6B8FAA; }
+    .nav-item.active span { color:#fff; }
 
-  /* QR grid */
-  .qr-grid {
-    display: grid;
-    grid-template-columns: repeat(11, 1fr);
-    grid-template-rows: repeat(11, 1fr);
-    gap: 1.5px;
-    width: 130px;
-    height: 130px;
-  }
-  .qr-cell { border-radius: 1.5px; }
-  .qr-dark { background: #FFFFFF; }
-  .qr-light { background: transparent; }
+    .badge-active { background:rgba(0,184,148,0.12);color:#00A87A;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:600; }
+    .badge-soon { background:rgba(107,143,170,0.1);color:#8AA5BA;border-radius:7px;padding:2px 7px;font-size:10px;font-weight:600; }
 
-  .screen-label {
-    position: absolute;
-    bottom: -32px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #4A4F68;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-  }
+    .filter-wrap { background:#fff;border-radius:18px;padding:5px;display:flex;gap:3px;box-shadow:0 1px 8px rgba(24,54,80,0.07); }
+    .filter-pill { flex:1;text-align:center;padding:7px;border-radius:13px;font-size:12px;font-weight:600;color:#6B8FAA;cursor:pointer; }
+    .filter-pill.active { background:#4F8EC4;color:#fff;box-shadow:0 2px 8px rgba(79,142,196,0.3); }
 
-  .page-title {
-    color: #fff;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-  }
-  .section-title {
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-</style>
+    .divider-row { display:flex;align-items:center;gap:8px;margin:12px 0 8px; }
+    .divider-row span { font-size:10px;font-weight:600;color:#8AA5BA;text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap; }
+    .divider-row::after { content:'';flex:1;height:1px;background:linear-gradient(to right,rgba(189,220,242,0.8),transparent); }
+
+    .tx-row { display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fff;border-radius:16px;box-shadow:0 1px 6px rgba(24,54,80,0.06);margin-bottom:8px; }
+    .tx-icon { width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+
+    .input-big { background:#fff;border-radius:15px;padding:14px 16px;box-shadow:0 1px 8px rgba(24,54,80,0.07);display:flex;align-items:center;justify-content:space-between; }
+
+    .btn-primary { width:100%;padding:15px;border-radius:18px;border:none;cursor:pointer;background:linear-gradient(135deg,#4F8EC4 0%,#4DB4EA 100%);color:#fff;font-size:15px;font-weight:600;box-shadow:0 4px 20px rgba(79,142,196,0.4);display:flex;align-items:center;justify-content:center;gap:8px; }
+    .btn-secondary { width:100%;padding:14px;border-radius:16px;border:none;cursor:pointer;background:rgba(79,142,196,0.1);color:#4F8EC4;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px; }
+    .btn-ghost { width:100%;padding:13px;border-radius:16px;border:none;cursor:pointer;background:#fff;color:#6B8FAA;font-size:13px;font-weight:600;box-shadow:0 1px 6px rgba(24,54,80,0.07);display:flex;align-items:center;justify-content:center;gap:6px; }
+
+    .back-chip { display:inline-flex;align-items:center;background:#fff;border-radius:12px;padding:7px 10px;box-shadow:0 1px 6px rgba(24,54,80,0.08);cursor:pointer;flex-shrink:0; }
+
+    .qr-card { background:#fff;border-radius:22px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 4px 24px rgba(24,54,80,0.10),0 1px 6px rgba(24,54,80,0.05); }
+    .qr-bg { background:#F8FBFE;border-radius:14px;padding:14px; }
+
+    .number { font-variant-numeric:tabular-nums;letter-spacing:-0.03em; }
+
+    .action-btn { background:#fff;border-radius:20px;padding:16px 8px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 2px 12px rgba(24,54,80,0.07),0 1px 3px rgba(24,54,80,0.04); }
+    .action-icon { width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center; }
+
+    .token-row { background:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:11px;box-shadow:0 1px 8px rgba(24,54,80,0.07);margin-bottom:8px; }
+    .token-avatar { width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:15px;color:#fff; }
+
+    .balance-card { margin:0 16px;border-radius:22px;overflow:hidden;position:relative;background:linear-gradient(145deg,#fff 0%,#F4F9FD 100%);box-shadow:0 4px 28px rgba(79,142,196,0.14),0 1px 6px rgba(24,54,80,0.06);padding:20px; }
+    .balance-orb-1 { position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(77,180,234,0.15) 0%,transparent 70%);filter:blur(20px);pointer-events:none; }
+    .balance-orb-2 { position:absolute;bottom:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(79,142,196,0.1) 0%,transparent 70%);filter:blur(20px);pointer-events:none; }
+
+    .warning-box { background:rgba(243,156,18,0.07);border-radius:14px;padding:11px 13px;display:flex;align-items:flex-start;gap:10px; }
+    .warning-icon { width:28px;height:28px;background:rgba(243,156,18,0.14);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    .fee-row { background:#fff;border-radius:13px;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 6px rgba(24,54,80,0.06); }
+  </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start py-16 px-4">
+<body>
 
-  <!-- Page header -->
-  <div class="mb-14 text-center">
-    <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <div style="width:36px;height:36px;background:linear-gradient(135deg,#6C5CE7,#00D2FF);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L20 7V17L12 22L4 17V7L12 2Z"/><path d="M12 8L16 10.5V15.5L12 18L8 15.5V10.5L12 8Z" fill="white" opacity="0.8" stroke="none"/></svg>
-      </div>
-      <span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.03em;">CryptoMIR</span>
-    </div>
-    <p style="color:#8A8FA8;font-size:13px;">Telegram Mini App · Design Preview</p>
-  </div>
-
-  <!-- Phones row -->
-  <div style="display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;justify-content:center;">
-
-    <!-- ══════════════════════════════════════════ -->
-    <!-- SCREEN 1: HOME -->
-    <!-- ══════════════════════════════════════════ -->
-    <div style="position:relative;">
-      <div class="phone-frame glow-purple">
-        <div class="phone-notch"></div>
-
-        <!-- Ambient glow -->
-        <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(108,92,231,0.12) 0%,transparent 70%);pointer-events:none;"></div>
-
-        <div style="padding:10px 14px 0;position:relative;z-index:1;">
+  <!-- ══════════════ SCREEN 1: HOME ══════════════ -->
+  <div>
+    <p class="phone-label">Главная</p>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div style="padding:8px 16px 0">
 
           <!-- Header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;gap:9px;">
-              <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6C5CE7,#8B7FE8);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#fff;box-shadow:0 0 14px rgba(108,92,231,0.45);">А</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#4F8EC4,#4DB4EA);box-shadow:0 2px 14px rgba(79,142,196,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="color:#fff;font-weight:700;font-size:18px">А</span>
+              </div>
               <div>
-                <div style="color:#8A8FA8;font-size:10px;line-height:1.2;">Привет,</div>
-                <div style="color:#fff;font-size:14px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;">Артём!</div>
+                <p style="font-size:11px;color:#6B8FAA;font-weight:500">Привет,</p>
+                <p style="font-size:15px;color:#183650;font-weight:700;line-height:1.1">Артём!</p>
               </div>
             </div>
-            <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6C5CE7,#00D2FF);display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(108,92,231,0.35);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L20 7V17L12 22L4 17V7L12 2Z"/></svg>
+            <div style="width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#4F8EC4,#4DB4EA);box-shadow:0 2px 10px rgba(79,142,196,0.28);display:flex;align-items:center;justify-content:center">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" stroke="white" stroke-width="2" fill="none" stroke-linejoin="round"/><path d="M12 8L16 10.5V15.5L12 18L8 15.5V10.5L12 8Z" fill="white" opacity="0.9"/></svg>
             </div>
           </div>
 
           <!-- Balance Card -->
-          <div class="balance-card" style="padding:14px;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-              <span style="color:#8A8FA8;font-size:10px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;">Баланс</span>
-              <div style="color:#4A4F68;cursor:pointer;" id="eye-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <div class="balance-card" style="margin-bottom:16px">
+            <div class="balance-orb-1"></div>
+            <div class="balance-orb-2"></div>
+            <div style="position:relative;z-index:1">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#00B894;box-shadow:0 0 5px #00B894"></div>
+                  <span style="font-size:10px;color:#6B8FAA;font-weight:600;letter-spacing:0.06em;text-transform:uppercase">Баланс</span>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#90ABBD" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#90ABBD" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                </div>
               </div>
-            </div>
-            <div style="font-size:26px;font-weight:700;color:#fff;letter-spacing:-0.04em;line-height:1.1;">0.00 <span style="font-size:16px;color:#8A8FA8;font-weight:500;">₽</span></div>
-            <div style="font-size:11px;color:#8A8FA8;margin-top:3px;">0.00 USDT</div>
-            <!-- Subtle shimmer line -->
-            <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(108,92,231,0.3),transparent);margin-top:10px;"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
-              <span style="font-size:9px;color:#4A4F68;">TRON · TRC-20</span>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <div style="width:5px;height:5px;border-radius:50%;background:#00B894;"></div>
-                <span style="font-size:9px;color:#00B894;">Активен</span>
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px">
+                <span class="number" style="font-size:40px;font-weight:700;color:#183650;letter-spacing:-0.04em;line-height:1">0.00</span>
+                <span style="font-size:16px;font-weight:600;color:#4F8EC4">USDT</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:13px;color:#90ABBD">≈ $0.00</span>
+                <span class="badge-active">TRC-20</span>
               </div>
             </div>
           </div>
 
-          <!-- Action buttons -->
-          <div style="display:flex;gap:7px;margin-bottom:14px;">
-            <div class="btn-action" style="border-color:rgba(0,210,255,0.2);background:rgba(0,210,255,0.06);">
-              <div style="width:36px;height:36px;background:rgba(0,210,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M12 16l-5-5M12 16l5-5"/><path d="M2 20h20"/></svg>
+          <!-- Action Buttons -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+            <div class="action-btn">
+              <div class="action-icon" style="background:rgba(77,180,234,0.1)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L8 11M12 15L16 11" stroke="#4DB4EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19H21" stroke="#4DB4EA" stroke-width="2.5" stroke-linecap="round"/></svg>
               </div>
-              <span style="font-size:10px;font-weight:600;color:#00D2FF;">Пополнить</span>
+              <span style="font-size:11px;font-weight:600;color:#4DB4EA">Пополнить</span>
             </div>
-            <div class="btn-action" style="border-color:rgba(108,92,231,0.2);background:rgba(108,92,231,0.06);">
-              <div style="width:36px;height:36px;background:rgba(108,92,231,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6C5CE7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <div class="action-btn">
+              <div class="action-icon" style="background:rgba(79,142,196,0.1)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="#4F8EC4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
-              <span style="font-size:10px;font-weight:600;color:#6C5CE7;">Отправить</span>
+              <span style="font-size:11px;font-weight:600;color:#4F8EC4">Отправить</span>
             </div>
-            <div class="btn-action">
-              <div style="width:36px;height:36px;background:rgba(138,143,168,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div class="action-btn">
+              <div class="action-icon" style="background:rgba(107,143,170,0.08)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#6B8FAA" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
-              <span style="font-size:10px;font-weight:600;color:#8A8FA8;">История</span>
+              <span style="font-size:11px;font-weight:600;color:#6B8FAA">История</span>
             </div>
           </div>
 
           <!-- Assets -->
-          <div style="margin-bottom:10px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-              <span style="color:#fff;font-size:12px;font-weight:600;">Активы</span>
-              <span style="color:#4A4F68;font-size:9px;">TRC-20</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:14px;font-weight:700;color:#183650">Активы</span>
+            <span style="font-size:10px;color:#8AA5BA;font-weight:500">TRC-20</span>
+          </div>
+          <div class="token-row">
+            <div class="token-avatar" style="background:linear-gradient(135deg,#26A17B,#1A7A56);box-shadow:0 2px 8px rgba(38,161,123,0.25)">$</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+                <span style="font-size:13px;font-weight:600;color:#183650">USDT</span>
+                <span class="badge-active">Активен</span>
+              </div>
+              <span style="font-size:11px;color:#6B8FAA">Tether USD</span>
             </div>
-
-            <!-- USDT active -->
-            <div class="token-row" style="border-color:rgba(108,92,231,0.18);">
-              <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#26A17B,#1A7A56);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 0 10px rgba(38,161,123,0.25);">$</div>
-              <div style="flex:1;min-width:0;">
-                <div style="display:flex;align-items:center;gap:5px;">
-                  <span style="color:#fff;font-size:12px;font-weight:600;">USDT</span>
-                  <span style="font-size:9px;padding:2px 5px;border-radius:5px;background:rgba(0,184,148,0.15);color:#00B894;font-weight:600;">Активен</span>
-                </div>
-                <div style="color:#8A8FA8;font-size:10px;">Tether USD</div>
-              </div>
-              <div style="text-align:right;">
-                <div style="color:#fff;font-size:12px;font-weight:700;">0.00</div>
-                <div style="color:#8A8FA8;font-size:10px;">$0.00</div>
-              </div>
-            </div>
-
-            <!-- TON soon -->
-            <div class="token-row" style="opacity:0.35;">
-              <div style="width:34px;height:34px;border-radius:50%;background:rgba(0,152,234,0.15);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0098EA;flex-shrink:0;">T</div>
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:5px;">
-                  <span style="color:#8A8FA8;font-size:12px;font-weight:600;">TON</span>
-                  <span style="font-size:9px;padding:2px 5px;border-radius:5px;background:rgba(138,143,168,0.1);color:#8A8FA8;font-weight:600;">Скоро</span>
-                </div>
-                <div style="color:#4A4F68;font-size:10px;">Toncoin</div>
-              </div>
-            </div>
-
-            <!-- BTC soon -->
-            <div class="token-row" style="opacity:0.25;">
-              <div style="width:34px;height:34px;border-radius:50%;background:rgba(247,147,26,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#F7931A;flex-shrink:0;">₿</div>
-              <div style="flex:1;">
-                <div style="display:flex;align-items:center;gap:5px;">
-                  <span style="color:#8A8FA8;font-size:12px;font-weight:600;">BTC</span>
-                  <span style="font-size:9px;padding:2px 5px;border-radius:5px;background:rgba(138,143,168,0.1);color:#8A8FA8;font-weight:600;">Скоро</span>
-                </div>
-                <div style="color:#4A4F68;font-size:10px;">Bitcoin</div>
-              </div>
+            <div style="text-align:right">
+              <div class="number" style="font-size:13px;font-weight:700;color:#183650">0.00</div>
+              <div style="font-size:10px;color:#90ABBD">$0.00</div>
             </div>
           </div>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="bottom-nav" style="margin-top:auto;">
-          <div class="nav-item">
-            <div style="position:relative;">
-              <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:24px;height:2px;background:#6C5CE7;border-radius:2px;"></div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(108,92,231,0.2)" stroke="#6C5CE7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z"/></svg>
+          <div style="opacity:0.42">
+            <div class="token-row">
+              <div class="token-avatar" style="background:rgba(0,152,234,0.15)"><span style="color:#0098EA;font-size:14px">T</span></div>
+              <div style="flex:1"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><span style="font-size:13px;font-weight:600;color:#6B8FAA">TON</span><span class="badge-soon">Скоро</span></div><span style="font-size:11px;color:#90ABBD">Toncoin</span></div>
             </div>
-            <span style="font-size:9px;font-weight:600;color:#6C5CE7;">Главная</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Отправить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M12 16l-5-5M12 16l5-5"/><path d="M2 20h20"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Получить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">История</span>
+            <div class="token-row">
+              <div class="token-avatar" style="background:rgba(247,147,26,0.12)"><span style="color:#F7931A;font-size:14px">B</span></div>
+              <div style="flex:1"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px"><span style="font-size:13px;font-weight:600;color:#6B8FAA">BTC</span><span class="badge-soon">Скоро</span></div><span style="font-size:11px;color:#90ABBD">Bitcoin</span></div>
+            </div>
           </div>
         </div>
       </div>
-      <span class="screen-label">Главная</span>
+      <div class="bottom-nav"><div class="bottom-nav-inner">
+        <div class="nav-item active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.2)"/></svg><span>Главная</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отправить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L8 11M12 15L16 11" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19H21" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round"/></svg><span>Получить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#6B8FAA" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>История</span></div>
+      </div></div>
     </div>
-
-    <!-- ══════════════════════════════════════════ -->
-    <!-- SCREEN 2: SEND -->
-    <!-- ══════════════════════════════════════════ -->
-    <div style="position:relative;">
-      <div class="phone-frame">
-        <div class="phone-notch"></div>
-        <div style="position:absolute;top:-20px;right:-20px;width:160px;height:160px;background:radial-gradient(circle,rgba(108,92,231,0.1) 0%,transparent 70%);pointer-events:none;"></div>
-
-        <div style="padding:10px 14px 0;position:relative;z-index:1;display:flex;flex-direction:column;height:calc(100% - 20px);">
-
-          <!-- Header -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-            <div style="width:32px;height:32px;background:#13141A;border:1px solid #1E2030;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </div>
-            <h1 style="color:#fff;font-size:18px;font-weight:700;letter-spacing:-0.03em;">Отправить</h1>
-          </div>
-
-          <!-- Amount display -->
-          <div style="background:#13141A;border-radius:16px;border:1px solid #1E2030;padding:14px;margin-bottom:14px;text-align:center;">
-            <div style="color:#4A4F68;font-size:10px;margin-bottom:6px;letter-spacing:0.05em;text-transform:uppercase;">Сумма</div>
-            <div style="font-size:32px;font-weight:700;color:#fff;letter-spacing:-0.04em;">0.00</div>
-            <div style="font-size:12px;color:#8A8FA8;margin-top:2px;">USDT</div>
-          </div>
-
-          <!-- Address input -->
-          <div style="margin-bottom:10px;">
-            <div style="color:#8A8FA8;font-size:10px;font-weight:500;margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;">TRON адрес</div>
-            <div style="position:relative;">
-              <input class="input-field" placeholder="T..." style="padding-right:36px;" readonly>
-              <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#4A4F68;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Amount input -->
-          <div style="margin-bottom:12px;">
-            <div style="color:#8A8FA8;font-size:10px;font-weight:500;margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;">Сумма USDT</div>
-            <div style="position:relative;">
-              <input class="input-field" placeholder="0.00" style="padding-right:52px;" readonly>
-              <div style="position:absolute;right:10px;top:50%;transform:translateY(-50%);">
-                <span style="font-size:10px;font-weight:600;color:#6C5CE7;background:rgba(108,92,231,0.12);padding:3px 7px;border-radius:6px;">MAX</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Fee -->
-          <div style="background:#13141A;border-radius:10px;border:1px solid #1E2030;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span style="color:#8A8FA8;font-size:11px;">Комиссия сети</span>
-            </div>
-            <span style="color:#fff;font-size:11px;font-weight:600;">~1.0 TRX</span>
-          </div>
-
-          <!-- Divider -->
-          <div style="flex:1;"></div>
-
-          <!-- Send button -->
-          <div style="margin-bottom:10px;">
-            <button style="width:100%;background:linear-gradient(135deg,#6C5CE7,#8B7FE8);border:none;border-radius:14px;padding:14px;color:#fff;font-size:14px;font-weight:600;letter-spacing:-0.01em;cursor:pointer;box-shadow:0 4px 20px rgba(108,92,231,0.4);">
-              Отправить
-            </button>
-          </div>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="bottom-nav">
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Главная</span>
-          </div>
-          <div class="nav-item">
-            <div style="position:relative;">
-              <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:24px;height:2px;background:#6C5CE7;border-radius:2px;"></div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(108,92,231,0.15)" stroke="#6C5CE7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </div>
-            <span style="font-size:9px;font-weight:600;color:#6C5CE7;">Отправить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M12 16l-5-5M12 16l5-5"/><path d="M2 20h20"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Получить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">История</span>
-          </div>
-        </div>
-      </div>
-      <span class="screen-label">Отправить</span>
-    </div>
-
-    <!-- ══════════════════════════════════════════ -->
-    <!-- SCREEN 3: RECEIVE -->
-    <!-- ══════════════════════════════════════════ -->
-    <div style="position:relative;">
-      <div class="phone-frame" style="box-shadow: 0 0 0 6px #0D0E14, 0 0 0 7px #1E2030, 0 40px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,210,255,0.08);">
-        <div class="phone-notch"></div>
-        <div style="position:absolute;top:-20px;left:-20px;width:160px;height:160px;background:radial-gradient(circle,rgba(0,210,255,0.08) 0%,transparent 70%);pointer-events:none;"></div>
-
-        <div style="padding:10px 14px 0;position:relative;z-index:1;">
-
-          <!-- Header -->
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
-            <div style="width:32px;height:32px;background:#13141A;border:1px solid #1E2030;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </div>
-            <h1 style="color:#fff;font-size:18px;font-weight:700;letter-spacing:-0.03em;">Получить</h1>
-          </div>
-
-          <!-- QR Card -->
-          <div style="background:#13141A;border:1px solid rgba(0,210,255,0.2);border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;margin-bottom:14px;">
-            <div style="color:#8A8FA8;font-size:10px;margin-bottom:12px;letter-spacing:0.05em;text-transform:uppercase;">Ваш USDT адрес</div>
-
-            <!-- QR Code SVG -->
-            <div style="background:#fff;border-radius:12px;padding:10px;margin-bottom:12px;position:relative;">
-              <svg width="110" height="110" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Corner squares -->
-                <rect x="5" y="5" width="28" height="28" rx="3" fill="#0A0B0E"/>
-                <rect x="9" y="9" width="20" height="20" rx="2" fill="white"/>
-                <rect x="13" y="13" width="12" height="12" rx="1" fill="#0A0B0E"/>
-
-                <rect x="77" y="5" width="28" height="28" rx="3" fill="#0A0B0E"/>
-                <rect x="81" y="9" width="20" height="20" rx="2" fill="white"/>
-                <rect x="85" y="13" width="12" height="12" rx="1" fill="#0A0B0E"/>
-
-                <rect x="5" y="77" width="28" height="28" rx="3" fill="#0A0B0E"/>
-                <rect x="9" y="81" width="20" height="20" rx="2" fill="white"/>
-                <rect x="13" y="85" width="12" height="12" rx="1" fill="#0A0B0E"/>
-
-                <!-- Data dots pattern -->
-                <rect x="40" y="5" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="5" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="60" y="5" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="40" y="15" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="60" y="15" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="25" width="6" height="6" rx="1" fill="#0A0B0E"/>
-
-                <rect x="5" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="15" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="25" y="50" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="5" y="60" width="6" height="6" rx="1" fill="#0A0B0E"/>
-
-                <rect x="77" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="99" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="88" y="50" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="99" y="60" width="6" height="6" rx="1" fill="#0A0B0E"/>
-
-                <!-- Center data -->
-                <rect x="40" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="64" y="40" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="40" y="50" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="64" y="50" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="64" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="64" y="64" width="6" height="6" rx="1" fill="#0A0B0E"/>
-
-                <!-- Logo center -->
-                <rect x="46" y="46" width="18" height="18" rx="4" fill="#6C5CE7"/>
-                <polygon points="55,49 59,51.5 59,56.5 55,59 51,56.5 51,51.5" fill="none" stroke="white" stroke-width="1.2"/>
-
-                <rect x="40" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="64" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="40" y="88" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="64" y="88" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="50" y="99" width="6" height="6" rx="1" fill="#0A0B0E"/>
-
-                <rect x="77" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="88" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="99" y="77" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="77" y="88" width="6" height="6" rx="1" fill="#0A0B0E"/>
-                <rect x="99" y="99" width="6" height="6" rx="1" fill="#0A0B0E"/>
-              </svg>
-            </div>
-
-            <!-- Address -->
-            <div style="background:#0A0B0E;border-radius:10px;padding:9px 12px;width:100%;display:flex;align-items:center;justify-content:space-between;border:1px solid #1E2030;">
-              <span style="font-size:10px;color:#8A8FA8;font-family:monospace;letter-spacing:0.02em;">TRxx...xxxx</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#6C5CE7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </div>
-          </div>
-
-          <!-- Copy button -->
-          <button style="width:100%;background:rgba(0,210,255,0.1);border:1px solid rgba(0,210,255,0.25);border-radius:14px;padding:13px;color:#00D2FF;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:10px;cursor:pointer;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Скопировать адрес
-          </button>
-
-          <!-- Warning -->
-          <div style="background:rgba(225,112,85,0.08);border:1px solid rgba(225,112,85,0.18);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:7px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#E17055" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span style="font-size:10px;color:#E17055;font-weight:500;">Только USDT TRC-20</span>
-          </div>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="bottom-nav" style="margin-top:10px;">
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Главная</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Отправить</span>
-          </div>
-          <div class="nav-item">
-            <div style="position:relative;">
-              <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:24px;height:2px;background:#00D2FF;border-radius:2px;"></div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(0,210,255,0.15)" stroke="#00D2FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M12 16l-5-5M12 16l5-5"/><path d="M2 20h20"/></svg>
-            </div>
-            <span style="font-size:9px;font-weight:600;color:#00D2FF;">Получить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">История</span>
-          </div>
-        </div>
-      </div>
-      <span class="screen-label">Получить</span>
-    </div>
-
-    <!-- ══════════════════════════════════════════ -->
-    <!-- SCREEN 4: HISTORY -->
-    <!-- ══════════════════════════════════════════ -->
-    <div style="position:relative;">
-      <div class="phone-frame">
-        <div class="phone-notch"></div>
-
-        <div style="padding:10px 14px 0;position:relative;z-index:1;">
-
-          <!-- Header -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div style="width:32px;height:32px;background:#13141A;border:1px solid #1E2030;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-              </div>
-              <div>
-                <h1 style="color:#fff;font-size:18px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;">История</h1>
-                <p style="color:#8A8FA8;font-size:10px;">2 операции</p>
-              </div>
-            </div>
-            <div style="width:32px;height:32px;background:#13141A;border:1px solid #1E2030;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-            </div>
-          </div>
-
-          <!-- Filter tabs -->
-          <div style="display:flex;gap:3px;padding:3px;background:#13141A;border:1px solid #1E2030;border-radius:12px;margin-bottom:14px;">
-            <div class="filter-tab active">Все</div>
-            <div class="filter-tab">Получено</div>
-            <div class="filter-tab">Отправлено</div>
-          </div>
-
-          <!-- Date group -->
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <span style="color:#4A4F68;font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;">Сегодня</span>
-            <div style="flex:1;height:1px;background:#1E2030;"></div>
-          </div>
-
-          <!-- TX 1: Received -->
-          <div class="tx-row" style="border-color:rgba(0,184,148,0.15);">
-            <div style="width:34px;height:34px;background:rgba(0,184,148,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00B894" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="color:#fff;font-size:12px;font-weight:600;">Получено</div>
-              <div style="color:#4A4F68;font-size:10px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">TRxxxx...xxxx</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div style="font-size:12px;font-weight:700;color:#00B894;">+10.00</div>
-              <div style="font-size:9px;color:#4A4F68;margin-top:1px;">USDT · 14:23</div>
-            </div>
-          </div>
-
-          <!-- TX 2: Sent -->
-          <div class="tx-row" style="border-color:rgba(225,112,85,0.15);">
-            <div style="width:34px;height:34px;background:rgba(225,112,85,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E17055" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="color:#fff;font-size:12px;font-weight:600;">Отправлено</div>
-              <div style="color:#4A4F68;font-size:10px;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">TRxxxx...xxxx</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div style="font-size:12px;font-weight:700;color:#E17055;">−5.00</div>
-              <div style="font-size:9px;color:#4A4F68;margin-top:1px;">USDT · 11:05</div>
-            </div>
-          </div>
-
-          <!-- Date group 2 -->
-          <div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px;">
-            <span style="color:#4A4F68;font-size:9px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;">Вчера</span>
-            <div style="flex:1;height:1px;background:#1E2030;"></div>
-          </div>
-
-          <!-- TX 3 -->
-          <div class="tx-row" style="opacity:0.6;">
-            <div style="width:34px;height:34px;background:rgba(0,184,148,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00B894" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
-            </div>
-            <div style="flex:1;">
-              <div style="color:#fff;font-size:12px;font-weight:600;">Получено</div>
-              <div style="color:#4A4F68;font-size:10px;margin-top:1px;">TRxxxx...xxxx</div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div style="font-size:12px;font-weight:700;color:#00B894;">+25.00</div>
-              <div style="font-size:9px;color:#4A4F68;margin-top:1px;">USDT · 09:18</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="bottom-nav" style="margin-top:10px;">
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Главная</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Отправить</span>
-          </div>
-          <div class="nav-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A8FA8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M12 16l-5-5M12 16l5-5"/><path d="M2 20h20"/></svg>
-            <span style="font-size:9px;font-weight:500;color:#8A8FA8;">Получить</span>
-          </div>
-          <div class="nav-item">
-            <div style="position:relative;">
-              <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);width:24px;height:2px;background:#6C5CE7;border-radius:2px;"></div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(108,92,231,0.15)" stroke="#6C5CE7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-            <span style="font-size:9px;font-weight:600;color:#6C5CE7;">История</span>
-          </div>
-        </div>
-      </div>
-      <span class="screen-label">История</span>
-    </div>
-
   </div>
 
-  <!-- Footer -->
-  <div style="margin-top:64px;text-align:center;padding-bottom:40px;">
-    <div style="height:1px;background:linear-gradient(90deg,transparent,#1E2030,transparent);max-width:400px;margin:0 auto 20px;"></div>
-    <span style="color:#2A2B38;font-size:11px;font-weight:500;letter-spacing:0.05em;">CRYPTOMIR · TELEGRAM MINI APP</span>
+  <!-- ══════════════ SCREEN 2: SEND ══════════════ -->
+  <div>
+    <p class="phone-label">Отправить</p>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div style="padding:8px 16px 0">
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+            <div class="back-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div><p style="font-size:18px;font-weight:700;color:#183650;letter-spacing:-0.02em;line-height:1.1">Отправить</p><p style="font-size:11px;color:#6B8FAA;font-weight:500">USDT · TRC-20</p></div>
+          </div>
+
+          <div style="background:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 8px rgba(24,54,80,0.07);margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:7px"><div style="width:7px;height:7px;border-radius:50%;background:#00B894;box-shadow:0 0 5px #00B894"></div><span style="font-size:13px;color:#6B8FAA">Доступно</span></div>
+            <span style="font-size:14px;font-weight:700;color:#183650">0.00 <span style="font-weight:400;color:#6B8FAA">USDT</span></span>
+          </div>
+
+          <p style="font-size:10px;font-weight:600;color:#6B8FAA;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px">TRON адрес получателя</p>
+          <div style="background:#fff;border-radius:15px;padding:14px 16px;box-shadow:0 1px 8px rgba(24,54,80,0.07);margin-bottom:16px;min-height:64px">
+            <span style="font-size:13px;color:#90ABBD;font-family:monospace">T... введите TRON адрес</span>
+          </div>
+
+          <p style="font-size:10px;font-weight:600;color:#6B8FAA;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px">Сумма USDT</p>
+          <div class="input-big" style="margin-bottom:10px">
+            <span class="number" style="font-size:28px;font-weight:700;color:#90ABBD;letter-spacing:-0.04em">0.00</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="background:rgba(79,142,196,0.12);border-radius:9px;padding:4px 10px"><span style="font-size:11px;font-weight:700;color:#4F8EC4">MAX</span></div>
+              <span style="font-size:13px;font-weight:500;color:#6B8FAA">USDT</span>
+            </div>
+          </div>
+
+          <div class="fee-row" style="margin-bottom:24px">
+            <div style="display:flex;align-items:center;gap:7px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F7931A" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <span style="font-size:12px;color:#6B8FAA;font-weight:500">Комиссия сети</span>
+            </div>
+            <span style="font-size:12px;font-weight:600;color:#183650">~1.0 TRX</span>
+          </div>
+
+          <button class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+            Продолжить
+          </button>
+        </div>
+      </div>
+      <div class="bottom-nav"><div class="bottom-nav-inner">
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Главная</span></div>
+        <div class="nav-item active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отправить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L8 11M12 15L16 11" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19H21" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round"/></svg><span>Получить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#6B8FAA" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>История</span></div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SCREEN 3: RECEIVE ══════════════ -->
+  <div>
+    <p class="phone-label">Получить</p>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div style="padding:8px 16px 0">
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px">
+            <div class="back-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+            <div><p style="font-size:18px;font-weight:700;color:#183650;letter-spacing:-0.02em;line-height:1.1">Получить</p><p style="font-size:11px;color:#6B8FAA;font-weight:500">USDT · TRC-20</p></div>
+          </div>
+
+          <!-- QR Card — zero border, pure shadow -->
+          <div class="qr-card" style="margin-bottom:12px">
+            <p style="font-size:10px;font-weight:600;color:#6B8FAA;letter-spacing:0.06em;text-transform:uppercase">Ваш адрес USDT</p>
+            <div class="qr-bg">
+              <svg width="190" height="190" viewBox="0 0 190 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="54" height="54" rx="7" fill="#183650"/>
+                <rect x="18" y="18" width="38" height="38" rx="4" fill="#F8FBFE"/>
+                <rect x="24" y="24" width="26" height="26" rx="3" fill="#183650"/>
+                <rect x="126" y="10" width="54" height="54" rx="7" fill="#183650"/>
+                <rect x="134" y="18" width="38" height="38" rx="4" fill="#F8FBFE"/>
+                <rect x="140" y="24" width="26" height="26" rx="3" fill="#183650"/>
+                <rect x="10" y="126" width="54" height="54" rx="7" fill="#183650"/>
+                <rect x="18" y="134" width="38" height="38" rx="4" fill="#F8FBFE"/>
+                <rect x="24" y="140" width="26" height="26" rx="3" fill="#183650"/>
+                <rect x="76" y="10" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="10" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="10" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="76" y="23" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="89" y="23" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="23" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="36" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="36" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="102" y="36" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="49" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="49" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="49" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="10" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="23" y="76" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="36" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="49" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="62" y="76" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="76" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="76" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="115" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="141" y="76" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="154" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="167" y="76" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="10" y="89" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="23" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="36" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="49" y="89" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="62" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="115" y="89" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="128" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="141" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="89" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="167" y="89" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="102" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="102" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="115" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="102" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="141" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="167" y="102" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="115" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="89" y="115" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="115" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="115" y="115" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="115" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="141" y="115" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="115" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="167" y="115" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="76" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="128" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="115" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="141" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="128" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="167" y="128" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="141" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="102" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="115" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="141" y="141" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="154" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="167" y="141" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="76" y="154" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="89" y="154" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="154" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="115" y="154" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="154" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="141" y="154" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="154" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="167" y="154" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="76" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="89" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="102" y="167" width="9" height="9" rx="2" fill="#4DB4EA"/>
+                <rect x="115" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="128" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="141" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="154" y="167" width="9" height="9" rx="2" fill="#4F8EC4"/>
+                <rect x="167" y="167" width="9" height="9" rx="2" fill="#183650"/>
+                <rect x="80" y="80" width="30" height="30" rx="8" fill="white"/>
+                <path d="M95 84L102 88V96L95 100L88 96V88L95 84Z" stroke="#4F8EC4" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+                <path d="M95 88L99 90.5V95.5L95 98L91 95.5V90.5L95 88Z" fill="#4F8EC4" opacity="0.7"/>
+              </svg>
+            </div>
+            <div style="background:#F0F7FC;border-radius:12px;padding:10px 13px;display:flex;align-items:center;gap:10px;width:100%">
+              <span style="flex:1;font-size:11px;color:#183650;font-weight:500;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">TRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4F8EC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </div>
+          </div>
+
+          <button class="btn-secondary" style="margin-bottom:10px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4F8EC4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Скопировать адрес
+          </button>
+          <button class="btn-ghost" style="margin-bottom:14px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Поделиться
+          </button>
+          <div class="warning-box">
+            <div class="warning-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F39C12" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <p style="font-size:11px;color:#8A6520;font-weight:500;line-height:1.5">Отправляйте только <strong>USDT TRC-20</strong> на этот адрес. Другие токены будут потеряны.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav"><div class="bottom-nav-inner">
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Главная</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отправить</span></div>
+        <div class="nav-item active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L8 11M12 15L16 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19H21" stroke="white" stroke-width="2" stroke-linecap="round"/></svg><span>Получить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#6B8FAA" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>История</span></div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ SCREEN 4: HISTORY ══════════════ -->
+  <div>
+    <p class="phone-label">История</p>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div style="padding:8px 16px 0">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="back-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#183650" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></div>
+              <div><p style="font-size:18px;font-weight:700;color:#183650;letter-spacing:-0.02em;line-height:1.1">История</p><p style="font-size:11px;color:#6B8FAA;font-weight:500">12 транзакций</p></div>
+            </div>
+            <div style="width:34px;height:34px;background:#fff;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 6px rgba(24,54,80,0.08)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B8FAA" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            </div>
+          </div>
+
+          <div class="filter-wrap" style="margin-bottom:18px">
+            <div class="filter-pill active">Все</div>
+            <div class="filter-pill">Получено</div>
+            <div class="filter-pill">Отправлено</div>
+          </div>
+
+          <div class="divider-row"><span>Сегодня</span></div>
+
+          <div class="tx-row">
+            <div class="tx-icon" style="background:rgba(0,184,148,0.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00B894" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/></svg></div>
+            <div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;color:#183650;margin-bottom:2px">Получено</p><p style="font-size:10px;color:#6B8FAA;font-family:monospace">TR3x...f9aB</p></div>
+            <div style="text-align:right;flex-shrink:0"><div class="number" style="font-size:13px;font-weight:700;color:#00B894">+10.00</div><div style="font-size:10px;color:#90ABBD">14:32</div></div>
+          </div>
+
+          <div class="tx-row">
+            <div class="tx-icon" style="background:rgba(225,112,85,0.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E17055" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div>
+            <div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;color:#183650;margin-bottom:2px">Отправлено</p><p style="font-size:10px;color:#6B8FAA;font-family:monospace">TK7m...d2cE</p></div>
+            <div style="text-align:right;flex-shrink:0"><div class="number" style="font-size:13px;font-weight:700;color:#E17055">-5.00</div><div style="font-size:10px;color:#90ABBD">11:15</div></div>
+          </div>
+
+          <div class="tx-row">
+            <div class="tx-icon" style="background:rgba(243,156,18,0.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F39C12" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><p style="font-size:12px;font-weight:600;color:#183650">Отправлено</p><div style="width:5px;height:5px;border-radius:50%;background:#F39C12;box-shadow:0 0 4px #F39C12"></div></div>
+              <p style="font-size:10px;color:#F39C12;font-weight:500">В обработке</p>
+            </div>
+            <div style="text-align:right;flex-shrink:0"><div class="number" style="font-size:13px;font-weight:700;color:#E17055">-2.50</div><div style="font-size:10px;color:#90ABBD">09:44</div></div>
+          </div>
+
+          <div class="divider-row"><span>Вчера</span></div>
+
+          <div class="tx-row">
+            <div class="tx-icon" style="background:rgba(0,184,148,0.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00B894" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/></svg></div>
+            <div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;color:#183650;margin-bottom:2px">Получено</p><p style="font-size:10px;color:#6B8FAA;font-family:monospace">TR9p...a1kW</p></div>
+            <div style="text-align:right;flex-shrink:0"><div class="number" style="font-size:13px;font-weight:700;color:#00B894">+50.00</div><div style="font-size:10px;color:#90ABBD">18:07</div></div>
+          </div>
+
+          <div class="tx-row">
+            <div class="tx-icon" style="background:rgba(225,112,85,0.1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E17055" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg></div>
+            <div style="flex:1;min-width:0"><p style="font-size:12px;font-weight:600;color:#183650;margin-bottom:2px">Отправлено</p><p style="font-size:10px;color:#6B8FAA;font-family:monospace">TL2n...b8mQ</p></div>
+            <div style="text-align:right;flex-shrink:0"><div class="number" style="font-size:13px;font-weight:700;color:#E17055">-25.00</div><div style="font-size:10px;color:#90ABBD">12:30</div></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="bottom-nav"><div class="bottom-nav-inner">
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Главная</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Отправить</span></div>
+        <div class="nav-item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3V15M12 15L8 11M12 15L16 11" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 19H21" stroke="#6B8FAA" stroke-width="2" stroke-linecap="round"/></svg><span>Получить</span></div>
+        <div class="nav-item active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/><polyline points="12 6 12 12 16 14" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>История</span></div>
+      </div></div>
+    </div>
   </div>
 
 </body>

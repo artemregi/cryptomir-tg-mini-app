@@ -13,20 +13,20 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onClick 
   const isFailed = transaction.status === 'failed'
 
   const statusColor = isFailed
-    ? '#E17055'
+    ? '#DC2626'
     : isPending
-    ? '#F39C12'
+    ? '#D97706'
     : isSend
-    ? '#E17055'
-    : '#00B894'
+    ? '#DC2626'
+    : '#059669'
 
   const statusBg = isFailed
-    ? 'rgba(225, 112, 85, 0.1)'
+    ? '#FEF2F2'
     : isPending
-    ? 'rgba(243, 156, 18, 0.1)'
+    ? '#FFFBEB'
     : isSend
-    ? 'rgba(225, 112, 85, 0.1)'
-    : 'rgba(0, 184, 148, 0.1)'
+    ? '#FEF2F2'
+    : '#ECFDF5'
 
   const label = isSend ? 'Отправлено' : 'Получено'
   const address = isSend ? transaction.to_address : transaction.from_address
@@ -34,25 +34,25 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onClick 
 
   return (
     <div
-      className="flex items-center gap-3 p-4 rounded-xl cursor-pointer active:opacity-70 transition-opacity"
+      className="flex items-center gap-3 p-4 rounded-2xl cursor-pointer active:opacity-70 transition-opacity"
       style={{
         background: '#FFFFFF',
-        boxShadow: '0 1px 6px rgba(24,54,80,0.06)',
+        border: '1px solid #F3F4F6',
       }}
       onClick={onClick}
     >
       {/* Icon */}
       <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: statusBg }}
+        className="flex items-center justify-center flex-shrink-0"
+        style={{ width: 44, height: 44, borderRadius: 14, background: statusBg }}
       >
         {isSend ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="7" y1="17" x2="17" y2="7"/>
             <polyline points="7 7 17 7 17 17"/>
           </svg>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={statusColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="17" y1="7" x2="7" y2="17"/>
             <polyline points="17 17 7 17 7 7"/>
           </svg>
@@ -62,22 +62,22 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onClick 
       {/* Details */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#183650' }}>{label}</span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{label}</span>
           {isPending && (
             <div
               className="w-1.5 h-1.5 rounded-full"
-              style={{ background: '#F39C12', boxShadow: '0 0 4px #F39C12', animation: 'pulse 1.5s ease-in-out infinite' }}
+              style={{ background: '#D97706', boxShadow: '0 0 4px #D97706', animation: 'pulse 1.5s ease-in-out infinite' }}
             />
           )}
         </div>
         <div className="flex items-center gap-2">
           {address ? (
-            <span style={{ fontSize: '11px', color: '#6B8FAA', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '12px', color: '#6B7280', fontFamily: 'monospace' }}>
               {shortenAddress(address, 6)}
             </span>
           ) : (
             <span
-              style={{ fontSize: '10px', background: statusBg, color: statusColor, padding: '2px 6px', borderRadius: '6px', fontWeight: 600 }}
+              style={{ fontSize: '11px', background: statusBg, color: statusColor, padding: '2px 7px', borderRadius: '6px', fontWeight: 600 }}
             >
               {statusLabel}
             </span>
@@ -88,11 +88,11 @@ const TransactionItem: React.FC<TransactionItemProps> = ({ transaction, onClick 
       {/* Amount + date */}
       <div className="text-right flex-shrink-0">
         <div
-          style={{ fontSize: '13px', fontWeight: 700, color: statusColor, fontVariantNumeric: 'tabular-nums' }}
+          style={{ fontSize: '15px', fontWeight: 700, color: statusColor, fontVariantNumeric: 'tabular-nums' }}
         >
           {formatAmountWithSign(transaction.amount, transaction.type)}
         </div>
-        <div style={{ fontSize: '10px', color: '#90ABBD', marginTop: '2px' }}>
+        <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '2px' }}>
           {formatDateShort(transaction.date || transaction.created_at || '')}
         </div>
       </div>
