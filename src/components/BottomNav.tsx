@@ -1,80 +1,50 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-const HomeIcon = ({ active }: { active: boolean }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M3 12L12 3L21 12V20C21 20.5523 20.5523 21 20 21H15V16H9V21H4C3.44772 21 3 20.5523 3 20V12Z"
-      fill={active ? '#2563EB' : 'none'}
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fillOpacity={active ? 0.15 : 0}
-    />
-  </svg>
-)
-
-const SendIcon = ({ active }: { active: boolean }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"
-      fill="none"
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
-const ReceiveIcon = ({ active }: { active: boolean }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M12 2V16M12 16L7 11M12 16L17 11"
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M2 20H22"
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-      strokeLinecap="round"
-    />
-  </svg>
-)
-
-const HistoryIcon = ({ active }: { active: boolean }) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-    <circle
-      cx="12"
-      cy="12"
-      r="10"
-      fill="none"
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-    />
-    <polyline
-      points="12 6 12 12 16 14"
-      stroke={active ? '#2563EB' : '#9CA3AF'}
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
 const BottomNav: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
   const navItems = [
-    { path: '/', label: 'Главная', Icon: HomeIcon },
-    { path: '/send', label: 'Отправить', Icon: SendIcon },
-    { path: '/receive', label: 'Получить', Icon: ReceiveIcon },
-    { path: '/history', label: 'История', Icon: HistoryIcon },
+    {
+      path: '/',
+      label: 'Главная',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? '#2563EB' : 'none'} stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 12L12 3L21 12V20C21 20.55 20.55 21 20 21H15V16H9V21H4C3.45 21 3 20.55 3 20V12Z"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/send',
+      label: 'Отправить',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'rgba(37,99,235,0.1)' : 'none'} stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/receive',
+      label: 'Получить',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'rgba(37,99,235,0.08)' : 'none'} stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2v14M12 16l-5-5M12 16l5-5"/>
+          <path d="M2 20h20"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/history',
+      label: 'История',
+      icon: (active: boolean) => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={active ? '#2563EB' : '#9CA3AF'} strokeWidth={active ? 1.8 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+    },
   ]
 
   const handleNavigate = (path: string) => {
@@ -86,35 +56,36 @@ const BottomNav: React.FC = () => {
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
       style={{
-        background: '#FFFFFF',
+        background: 'rgba(255,255,255,0.98)',
         borderTop: '1px solid #F3F4F6',
-        paddingBottom: 'env(safe-area-inset-bottom)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        padding: '10px 0',
+        paddingBottom: 'calc(10px + env(safe-area-inset-bottom))',
       }}
     >
-      <div className="flex items-center px-2 pt-2 pb-2">
-        {navItems.map(({ path, label, Icon }) => {
-          const isActive = location.pathname === path
-          return (
-            <button
-              key={path}
-              onClick={() => handleNavigate(path)}
-              className="flex-1 flex flex-col items-center gap-1 py-1.5 rounded-xl transition-all duration-200 active:scale-95"
+      {navItems.map(({ path, label, icon }) => {
+        const isActive = location.pathname === path
+        return (
+          <button
+            key={path}
+            onClick={() => handleNavigate(path)}
+            className="flex flex-col items-center gap-1 active:scale-95 transition-transform"
+            style={{ flex: 1 }}
+          >
+            {icon(isActive)}
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: isActive ? 600 : 400,
+                color: isActive ? '#2563EB' : '#9CA3AF',
+              }}
             >
-              <Icon active={isActive} />
-              <span
-                className="font-medium transition-all duration-200"
-                style={{
-                  color: isActive ? '#2563EB' : '#9CA3AF',
-                  fontSize: '10px',
-                  fontWeight: isActive ? 600 : 500,
-                }}
-              >
-                {label}
-              </span>
-            </button>
-          )
-        })}
-      </div>
+              {label}
+            </span>
+          </button>
+        )
+      })}
     </nav>
   )
 }

@@ -19,42 +19,15 @@ const Home: React.FC = () => {
     window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name ||
     'пользователь'
 
-  const avatarLetter = firstName.charAt(0).toUpperCase()
-
   const handleAction = (path: string) => {
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium')
     navigate(path)
   }
 
-  const assetCards = [
-    {
-      symbol: 'USDT',
-      name: 'Tether USD',
-      network: 'TRC-20',
-      gradient: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
-      active: true,
-    },
-    {
-      symbol: 'TON',
-      name: 'Toncoin',
-      network: 'TON',
-      gradient: 'linear-gradient(135deg, #0085CC 0%, #00AAEE 100%)',
-      active: false,
-    },
-    {
-      symbol: 'BTC',
-      name: 'Bitcoin',
-      network: 'BTC',
-      gradient: 'linear-gradient(135deg, #F7931A 0%, #E8780A 100%)',
-      active: false,
-    },
-    {
-      symbol: 'ETH',
-      name: 'Ethereum',
-      network: 'ERC-20',
-      gradient: 'linear-gradient(135deg, #627EEA 0%, #8A9FF0 100%)',
-      active: false,
-    },
+  const bannerCards = [
+    { label: 'Как пополнить?', gradient: 'linear-gradient(135deg,#1D4ED8,#2563EB)', shadow: 'rgba(37,99,235,0.32)' },
+    { label: 'QR‑платёж', gradient: 'linear-gradient(135deg,#0E7490,#0891B2)', shadow: 'rgba(8,145,178,0.32)', path: '/receive' },
+    { label: 'Реферальная', gradient: 'linear-gradient(135deg,#6D28D9,#7C3AED)', shadow: 'rgba(109,40,217,0.32)' },
   ]
 
   const actionButtons = [
@@ -62,9 +35,9 @@ const Home: React.FC = () => {
       label: 'Пополнить',
       path: '/receive',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 3V15M12 15L8 11M12 15L16 11"/>
-          <path d="M3 19H21"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
       ),
     },
@@ -72,18 +45,9 @@ const Home: React.FC = () => {
       label: 'Отправить',
       path: '/send',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
-        </svg>
-      ),
-    },
-    {
-      label: 'История',
-      path: '/history',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round">
+          <line x1="7" y1="17" x2="17" y2="7"/>
+          <polyline points="7 7 17 7 17 17"/>
         </svg>
       ),
     },
@@ -91,11 +55,48 @@ const Home: React.FC = () => {
       label: 'Получить',
       path: '/receive',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round">
+          <line x1="12" y1="19" x2="12" y2="5"/>
+          <polyline points="17 12 12 7 7 12"/>
+          <path d="M2 20h20"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Сканировать',
+      path: '/receive',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2">
           <rect x="3" y="3" width="7" height="7"/>
           <rect x="14" y="3" width="7" height="7"/>
           <rect x="3" y="14" width="7" height="7"/>
-          <path d="M14 14h.01M18 14h.01M14 18h.01M18 18h.01"/>
+          <rect x="17" y="17" width="4" height="4"/>
+        </svg>
+      ),
+    },
+  ]
+
+  const comingSoonTokens = [
+    {
+      symbol: 'TON', name: 'Toncoin',
+      gradient: 'linear-gradient(135deg,#0085CC,#00AAEE)',
+      shadow: 'rgba(0,133,204,0.25)',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3L22 9L18 21H6L2 9Z" fill="white" opacity="0.95"/>
+        </svg>
+      ),
+    },
+    {
+      symbol: 'BTC', name: 'Bitcoin',
+      gradient: 'linear-gradient(135deg,#F7931A,#E8780A)',
+      shadow: 'rgba(247,147,26,0.25)',
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M8 4.5H14.5C16.4 4.5 18 6.1 18 8C18 9.5 17 10.7 15.7 11.2C17.2 11.7 18.3 13.1 18.3 14.8C18.3 17 16.4 19 14.2 19H8V4.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+          <path d="M8 12H15.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="10.5" y1="2.5" x2="10.5" y2="5.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="13.5" y1="18.5" x2="13.5" y2="21.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
         </svg>
       ),
     },
@@ -104,209 +105,148 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#F0F4FA' }}>
       {/* Header */}
-      <div className="px-4 pt-5 pb-3">
+      <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%)',
-                color: '#1D4ED8',
-              }}
+              className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg,#BFDBFE,#93C5FD)' }}
             >
-              {avatarLetter}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
+              </svg>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 500 }}>Привет,</p>
-              <p style={{ fontSize: '16px', color: '#111827', fontWeight: 700, lineHeight: 1.1 }}>{firstName}!</p>
+              <div style={{ color: '#9CA3AF', fontSize: 13 }}>Привет,</div>
+              <div style={{ color: '#111827', fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>{firstName}!</div>
             </div>
           </div>
-
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
-              boxShadow: '0 2px 10px rgba(37,99,235,0.3)',
-            }}
+            className="w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ background: '#FFFFFF', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L20 7V17L12 22L4 17V7L12 2Z" stroke="white" strokeWidth="2" fill="none" strokeLinejoin="round"/>
-              <path d="M12 8L16 10.5V15.5L12 18L8 15.5V10.5L12 8Z" fill="white" opacity="0.9"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="1.8" strokeLinecap="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
           </div>
         </div>
       </div>
 
+      {/* Banner Cards */}
+      <div className="flex gap-2.5 px-5 mb-5 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+        {bannerCards.map((card) => (
+          <button
+            key={card.label}
+            onClick={() => card.path && handleAction(card.path)}
+            className="flex-shrink-0 flex flex-col justify-end active:scale-95 transition-transform"
+            style={{
+              width: 118, height: 78, borderRadius: 16,
+              background: card.gradient,
+              padding: 10,
+              boxShadow: `0 4px 14px ${card.shadow}`,
+            }}
+          >
+            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: 11, fontWeight: 600, lineHeight: 1.4, textAlign: 'left' }}>
+              {card.label}
+            </div>
+          </button>
+        ))}
+      </div>
+
       {/* Balance Card */}
-      <div className="mt-1 animate-slide-up">
+      <div className="mb-3 animate-slide-up">
         <BalanceCard />
       </div>
 
       {/* Action Buttons */}
-      <div className="mx-4 mt-4 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-        <div
-          className="rounded-2xl p-4"
-          style={{ background: '#FFFFFF', border: '1px solid #F3F4F6' }}
-        >
-          <div className="grid grid-cols-4 gap-1">
-            {actionButtons.map(({ label, path, icon }) => (
-              <button
-                key={label}
-                onClick={() => handleAction(path)}
-                className="flex flex-col items-center gap-2 py-2 rounded-xl active:scale-95 transition-transform"
-              >
-                <div
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ background: '#EFF6FF' }}
-                >
-                  {icon}
-                </div>
-                <span style={{ fontSize: '11px', fontWeight: 500, color: '#374151' }}>{label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+      <div
+        className="mx-5 mb-6 animate-slide-up"
+        style={{ animationDelay: '0.05s', background: '#FFFFFF', borderRadius: 18, padding: '18px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-around' }}
+      >
+        {actionButtons.map(({ label, path, icon }) => (
+          <button
+            key={label}
+            onClick={() => handleAction(path)}
+            className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
+          >
+            <div
+              className="flex items-center justify-center"
+              style={{ width: 56, height: 56, borderRadius: '50%', background: '#EFF6FF' }}
+            >
+              {icon}
+            </div>
+            <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>{label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Asset Cards — horizontal scroll */}
-      <div className="mt-5 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-        <div className="px-4 mb-3 flex items-center justify-between">
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>Активы</h2>
+      {/* Assets */}
+      <div className="px-5 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex items-center justify-between mb-3">
+          <span style={{ fontSize: 17, fontWeight: 600, color: '#111827' }}>Активы</span>
+          <span style={{ fontSize: 14, color: '#2563EB', fontWeight: 500 }}>Все →</span>
         </div>
-        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {assetCards.map((card) => (
+
+        <div className="space-y-2.5">
+          {/* USDT — active */}
+          {tokensLoading ? (
+            <div style={{ height: 72, borderRadius: 16, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+          ) : (
             <div
-              key={card.symbol}
-              className="flex-shrink-0 flex flex-col justify-between p-3.5 rounded-2xl"
-              style={{
-                width: 118,
-                height: 80,
-                background: card.gradient,
-                opacity: card.active ? 1 : 0.5,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
+              className="flex items-center gap-3.5"
+              style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px' }}
             >
-              {/* Decorative circle */}
               <div
-                style={{
-                  position: 'absolute',
-                  top: -12,
-                  right: -12,
-                  width: 56,
-                  height: 56,
-                  borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.12)',
-                }}
-              />
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF' }}>{card.symbol}</span>
-                {!card.active && (
-                  <span style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.7)', background: 'rgba(255,255,255,0.15)', padding: '2px 6px', borderRadius: '5px' }}>
-                    Скоро
-                  </span>
-                )}
-                {card.active && (
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 6px #4ADE80' }} />
-                )}
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#26A17B,#1E8A68)', boxShadow: '0 3px 10px rgba(38,161,123,0.25)' }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 7h16" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <line x1="12" y1="7" x2="12" y2="21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M7.5 12.5h9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </div>
-              <div>
-                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>{card.name}</p>
-                <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>{card.network}</p>
+              <div style={{ flex: 1 }}>
+                <div className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>USDT</span>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#ECFDF5', color: '#059669', fontWeight: 600 }}>Активен</span>
+                </div>
+                <div style={{ color: '#9CA3AF', fontSize: 13 }}>Tether USD</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                  {(tokens?.find(t => t.symbol === 'USDT')?.balance ?? 0).toFixed(2)}
+                </div>
+                <div style={{ fontSize: 12, color: '#9CA3AF' }}>$0.00</div>
+              </div>
+            </div>
+          )}
+
+          {/* Coming soon tokens */}
+          {comingSoonTokens.map((token) => (
+            <div
+              key={token.symbol}
+              className="flex items-center gap-3.5"
+              style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px', opacity: 0.4 }}
+            >
+              <div
+                className="flex items-center justify-center flex-shrink-0"
+                style={{ width: 44, height: 44, borderRadius: '50%', background: token.gradient }}
+              >
+                {token.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#6B7280' }}>{token.symbol}</span>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#F3F4F6', color: '#9CA3AF', fontWeight: 600 }}>Скоро</span>
+                </div>
+                <div style={{ color: '#9CA3AF', fontSize: 13 }}>{token.name}</div>
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Recent Transactions */}
-      <div className="mx-4 mt-5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>Последние операции</h2>
-          {recentTransactions.length > 0 && (
-            <button onClick={() => handleAction('/history')} style={{ fontSize: '13px', color: '#2563EB', fontWeight: 600 }}>
-              Все
-            </button>
-          )}
-        </div>
-
-        {txLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-16 rounded-2xl"
-                style={{
-                  background: 'linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.5s infinite',
-                }}
-              />
-            ))}
-          </div>
-        ) : recentTransactions.length > 0 ? (
-          <div className="space-y-2">
-            {recentTransactions.map((tx) => {
-              const isSend = tx.type === 'send'
-              const color = isSend ? '#DC2626' : '#059669'
-              const bg = isSend ? '#FEF2F2' : '#ECFDF5'
-              return (
-                <div
-                  key={tx.id}
-                  className="flex items-center gap-3 p-3.5 rounded-2xl active:opacity-70 transition-opacity cursor-pointer"
-                  style={{ background: '#FFFFFF', border: '1px solid #F3F4F6' }}
-                  onClick={() => handleAction('/history')}
-                >
-                  <div
-                    className="flex items-center justify-center flex-shrink-0"
-                    style={{ width: 44, height: 44, borderRadius: 14, background: bg }}
-                  >
-                    {isSend ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="7" y1="17" x2="17" y2="7"/>
-                        <polyline points="7 7 17 7 17 17"/>
-                      </svg>
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="17" y1="7" x2="7" y2="17"/>
-                        <polyline points="17 17 7 17 7 7"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span style={{ fontSize: '14px', color: '#111827', fontWeight: 600 }}>
-                      {isSend ? 'Отправлено' : 'Получено'}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div style={{ fontSize: '14px', fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>
-                      {formatAmountWithSign(tx.amount, tx.type)}
-                    </div>
-                    <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
-                      {formatDateShort(tx.date)}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div
-            className="flex flex-col items-center justify-center py-10 rounded-2xl"
-            style={{ background: '#FFFFFF', border: '1px solid #F3F4F6' }}
-          >
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
-              style={{ background: '#F3F4F6' }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.75">
-                <rect x="2" y="5" width="20" height="14" rx="2"/>
-                <line x1="2" y1="10" x2="22" y2="10"/>
-              </svg>
-            </div>
-            <p style={{ fontSize: '13px', color: '#6B7280', fontWeight: 500 }}>Нет операций</p>
-          </div>
-        )}
       </div>
 
       <style>{`
