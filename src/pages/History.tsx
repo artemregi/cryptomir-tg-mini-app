@@ -95,14 +95,16 @@ const History: React.FC = () => {
   }
 
   const statusLabel = (status: string) => {
-    if (status === 'completed' || status === 'done') return 'Выполнено'
-    if (status === 'pending' || status === 'pending_hold') return 'В обработке'
+    if (status === 'completed') return 'Выполнено'
+    if (status === 'pending' || status === 'pending_hold' || status === 'hold_confirmed' || status === 'broadcasting') return 'В обработке'
     if (status === 'failed') return 'Ошибка'
+    if (status === 'cancelled') return 'Отменено'
     return status
   }
 
-  const isPending = (status: string) => status === 'pending' || status === 'pending_hold'
-  const isFailed = (status: string) => status === 'failed'
+  const isPending = (status: string) =>
+    status === 'pending' || status === 'pending_hold' || status === 'hold_confirmed' || status === 'broadcasting'
+  const isFailed = (status: string) => status === 'failed' || status === 'cancelled'
 
   const getColors = (item: DisplayItem) => {
     if (isFailed(item.status)) return { color: '#DC2626', bg: '#FEF2F2' }
