@@ -64,132 +64,118 @@ export interface TelegramUser {
   photo_url?: string
 }
 
-// API Response types
-export interface ApiResponse<T> {
-  success: boolean
-  data: T
-  timestamp?: string
-  message?: string
+// ============================================================
+// Crypto Gateway API Types
+// ============================================================
+
+export interface AuthTokens {
+  access_token: string
+  refresh_token: string
 }
 
-// Profile
-export interface Profile {
+export interface GWProfile {
   id: string
-  telegram_id: number
-  first_name: string
-  last_name?: string
-  username?: string
-  tron_address?: string
-  wallet_address?: string
   created_at: string
+  updated_at: string
+  phone: string
+  email: string
+  username: string
+  full_name: string
+  avatar: string
+  role: string
 }
 
-export interface InitializeResponse {
-  user: Profile
-  tron_address?: string
-  wallet_address?: string
-  is_new: boolean
-}
-
-// Balance
-export interface TokenBalance {
-  currency: string
-  symbol: string
-  amount: number
-  usdValue: number
-}
-
-export interface BalanceData {
-  total: number
-  currency: string
-  symbol: string
-  balances: TokenBalance[]
-}
-
-// Tokens
-export interface Token {
+export interface GWNetwork {
   id: string
   name: string
-  symbol: string
-  balance: number | null
-  price: number | null
-  isActive: boolean
-  icon?: string
+  chain_id: number
+  enabled: boolean
 }
 
-// Transactions
-export type TransactionType = 'send' | 'top_up'
-export type TransactionStatus = 'pending' | 'confirmed' | 'failed'
-
-export interface Transaction {
+export interface GWAsset {
   id: string
-  type: TransactionType
-  status: TransactionStatus
-  amount: number
-  currency?: string
-  symbol?: string
-  chain?: string
-  token?: string
-  address?: string
-  from_address?: string
-  to_address?: string
-  target_address?: string
-  tx_hash?: string
-  date: string
-  created_at?: string
-  updated_at?: string
-  fee?: number
-  network_fee?: number
-  confirmations?: number
-  required_confirmations?: number
-}
-
-export interface TransactionsPagination {
-  page: number
-  limit: number
-  total: number
-  total_pages: number
-  has_next: boolean
-  has_previous: boolean
-}
-
-export interface TransactionsResponse {
-  transactions: Transaction[]
-  pagination: TransactionsPagination
-  // fallback aliases (in case API changes)
-  items?: Transaction[]
-  has_more?: boolean
-}
-
-// Networks
-export interface NetworkConfig {
-  id: string
+  network_id: string
   name: string
   symbol: string
-  chain_id?: string
-  fee: number
-  fee_currency: string
-  min_withdrawal: number
-  max_withdrawal: number
   decimals: number
-  explorer_url?: string
-  is_active: boolean
+  enabled: boolean
+  min_withdraw_amount: string
+  comission_fix: string
+  comission_percentage: string
 }
 
-// Withdrawal
-export interface WithdrawalRequest {
-  account_id: string
-  to: string
-  amount: number
-  mode: string
-}
-
-export interface WithdrawalResponse {
+export interface GWAccount {
   id: string
-  status: TransactionStatus
-  amount: number
-  fee: number
-  to: string
-  tx_hash?: string
   created_at: string
+  updated_at: string
+  user_id: string
+  asset_id: string
+  balance: string
+  type: 'user' | 'withdraw_hold' | 'system_deposit' | 'system_fee' | 'system_withdrawn'
+}
+
+export interface GWOperation {
+  id: string
+  transaction_id: string
+  asset_id: string
+  amount: string
+  account_from_id: string
+  account_to_id: string
+  net_amount_from: string
+  net_amount_to: string
+}
+
+export interface GWTransaction {
+  id: string
+  created_at: string
+  updated_at: string
+  external_id?: string
+  user_id?: string
+  asset_id: string
+  amount: string
+  type: 'deposit' | 'internal_transfer' | 'withdrawal'
+  status: 'pending' | 'completed' | 'failed'
+}
+
+export interface GWTransactionWithOps {
+  transaction: GWTransaction
+  operations: GWOperation[]
+}
+
+export interface GWWithdrawal {
+  id: string
+  created_at: string
+  updated_at: string
+  user_id: string
+  asset_id: string
+  wallet_id: string
+  to_address: string
+  amount: string
+  fee_percent: string
+  fee_fixed: string
+  fee_amount: string
+  total_amount: string
+  hold_transaction_id: string
+  final_transaction_id?: string
+  payout_tx_out_id?: string
+  status: 'pending_hold' | 'hold_confirmed' | 'broadcasting' | 'completed' | 'failed' | 'cancelled'
+  error_message?: string
+}
+
+export interface GWDepositWallet {
+  wallet_id: string
+  address: string
+  qr_code_png_base64: string
+  deposit_assets: GWAsset[]
+}
+
+// Sign In Step 1 response
+export interface SignInStep1Response {
+  token: string       // action token for X-Action-Token header
+  code_send_by: string
+}
+
+// Sign Up Step 1 response
+export interface SignUpStep1Response {
+  code_send_by: string
 }

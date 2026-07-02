@@ -1,81 +1,138 @@
 import client from './client'
 import type {
-  ApiResponse,
-  BalanceData,
-  Token,
-  TransactionsResponse,
-  NetworkConfig,
-  WithdrawalRequest,
-  WithdrawalResponse,
-  InitializeResponse,
-  Profile,
+  AuthTokens,
+  GWProfile,
+  GWAccount,
+  GWAsset,
+  GWNetwork,
+  GWTransactionWithOps,
+  GWWithdrawal,
+  GWDepositWallet,
+  SignInStep1Response,
+  SignUpStep1Response,
 } from '../types'
 
+// ============================================================
+// Auth
+// ============================================================
+
+export const signUp = async (email: string, username: string): Promise<SignUpStep1Response> => {
+  const { data } = await client.post('/api/v1/user/v1/sign_up', { email, username })
+  return data
+}
+
+export const signUpVerify = async (
+  email: string,
+  code: string,
+  password: string,
+  username: string
+): Promise<AuthTokens> => {
+  const { data } = await client.post('/api/v1/user/v1/sign_up/verify', {
+    source_type: 'EMAIL',
+    source_value: email,
+    code,
+    password,
+    username,
+  })
+  return data
+}
+
+export const signIn = async (email: string, password: string): Promise<SignInStep1Response> => {
+  const { data } = await client.post('/api/v1/user/v1/sign_in', { email, password })
+  return data
+}
+
+export const signInVerify = async (
+  email: string,
+  code: string,
+  actionToken: string
+): Promise<AuthTokens> => {
+  const { data } = await client.post(
+    '/api/v1/user/v1/sign_in/verify',
+    { source_type: 'EMAIL', source_value: email, code },
+    { headers: { 'X-Action-Token': actionToken } }
+  )
+  return data
+}
+
+export const logoutApi = async (): Promise<void> => {
+  await client.post('/api/v1/user/v1/logout')
+}
+
+// ============================================================
 // Profile
-export const initializeProfile = async (): Promise<ApiResponse<InitializeResponse>> => {
-  const { data } = await client.post('/v1/profile/initialize')
+// ============================================================
+
+export const getProfile = async (): Promise<GWProfile> => {
+  const { data } = await client.get('/api/v1/user/v1/profile')
   return data
 }
 
-export const getProfile = async (): Promise<ApiResponse<Profile>> => {
-  const { data } = await client.get('/v1/profile/me')
-  return data
+export const updateProfile = async (params: { username?: string; full_name?: string }): Promise<void> => {
+  await client.post('/api/v1/user/v1/profile/update', params)
 }
 
-// Balance
-export const getBalance = async (): Promise<ApiResponse<BalanceData>> => {
-  const { data } = await client.get('/v1/balance')
-  return data
-}
-
-// Tokens
-export const getTokens = async (): Promise<ApiResponse<Token[]>> => {
-  const { data } = await client.get('/v1/tokens')
-  return data
-}
-
-// Transactions
-export interface GetTransactionsParams {
-  page?: number
-  limit?: number
-  type?: 'send' | 'top_up'
-}
-
-export const getTransactions = async (
-  params: GetTransactionsParams = {}
-): Promise<ApiResponse<TransactionsResponse>> => {
-  const { data } = await client.get('/v1/transactions', {
-    params: {
-      page: params.page || 1,
-      limit: params.limit || 20,
-      ...(params.type ? { type: params.type } : {}),
-    },
-  })
-  return data
-}
-
+// ============================================================
 // Networks
-export const getNetworks = async (): Promise<ApiResponse<NetworkConfig[]>> => {
-  const { data } = await client.get('/v1/networks')
-  return data
+// ============================================================
+
+export const getNetworks = async (): Promise<GWNetwork[]> => {
+  const { data } = await client.get('/api/v1/network/v1/get')
+  return data.networks ?? []
 }
 
-// Withdrawals
+// ============================================================
+// Assets
+// ============================================================
+
+export const getAssets = async (networkId: string): Promise<GWAsset[]> => {
+  const { data } = await client.get('/api/v1/asset/v1/get', { params: { network_id: networkId } })
+  return data.assets ?? []
+}
+
+// ============================================================
+// Balance (ledger accounts)
+// ============================================================
+
+export const getAccounts = async (): Promise<GWAccount[]> => {
+  const { data } = await client.get('/api/v1/ledger/v1/account/by_enabled_assets')
+  return data.accounts ?? []
+}
+
+// ============================================================
+// Transactions
+// ============================================================
+
+export const getTransactions = async (): Promise<GWTransactionWithOps[]> => {
+  const { data } = await client.get('/api/v1/ledger/v1/transaction/list')
+  return data.transactions ?? []
+}
+
+export const getWithdrawals = async (): Promise<GWWithdrawal[]> => {
+  const { data } = await client.get('/api/v1/ledger/v1/withdrawal/list')
+  return data.withdrawals ?? []
+}
+
 export const createWithdrawal = async (
-  body: WithdrawalRequest
-): Promise<ApiResponse<WithdrawalResponse>> => {
-  const idempotencyKey = crypto.randomUUID()
-  const { data } = await client.post('/v1/wallets/tron/withdrawals', body, {
-    headers: {
-      'Idempotency-Key': idempotencyKey,
-    },
+  assetId: string,
+  amount: string,
+  toAddress: string
+): Promise<GWWithdrawal> => {
+  const { data } = await client.post('/api/v1/ledger/v1/withdrawal/create', {
+    asset_id: assetId,
+    amount,
+    to_address: toAddress,
   })
   return data
 }
 
-export const getWithdrawalStatus = async (
-  id: string
-): Promise<ApiResponse<WithdrawalResponse>> => {
-  const { data } = await client.get(`/v1/wallets/withdrawals/${id}`)
+// ============================================================
+// Deposit wallet
+// ============================================================
+
+export const getDepositWallet = async (networkId: string): Promise<GWDepositWallet> => {
+  const { data } = await client.get('/api/v1/wallet/v1/deposit/wallet', {
+    params: { network_id: networkId },
+  })
   return data
 }

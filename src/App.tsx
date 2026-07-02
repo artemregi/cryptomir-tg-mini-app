@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 import LoadingScreen from './components/LoadingScreen'
 import Home from './pages/Home'
@@ -11,80 +10,65 @@ import Profile from './pages/Profile'
 import KYC from './pages/KYC'
 import Card from './pages/Card'
 import Exchange from './pages/Exchange'
+import Auth from './pages/Auth'
 import { LanguageProvider } from './contexts/LanguageContext'
-import { initializeProfile } from './api/endpoints'
+import { tokenStorage } from './api/client'
 
-const App: React.FC = () => {
+const AUTH_ROUTES = ['/auth']
+
+const AppInner: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true)
-  const [initError, setInitError] = useState<string | null>(null)
-  const queryClient = useQueryClient()
   const location = useLocation()
+  const navigate = useNavigate()
 
-  // Determine if we're on a sub-page (not home)
-  const isSubPage = location.pathname !== '/'
+  const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        // Initialize Telegram WebApp
-        window.Telegram?.WebApp?.ready()
-        window.Telegram?.WebApp?.expand()
+    window.Telegram?.WebApp?.ready()
+    window.Telegram?.WebApp?.expand()
 
-        // Set color scheme
-        document.documentElement.style.setProperty('--tg-color-scheme', 'dark')
-
-        // Initialize user profile
-        const response = await initializeProfile()
-        if (response.success && response.data) {
-          // Cache profile and address data
-          queryClient.setQueryData(['profile'], response.data.user)
-          if (response.data.tron_address || response.data.wallet_address) {
-            queryClient.setQueryData(
-              ['tron_address'],
-              response.data.tron_address || response.data.wallet_address
-            )
-          }
-        }
-      } catch (err) {
-        console.error('Failed to initialize:', err)
-        // Non-fatal: continue even if initialize fails
-        // User might still be able to use the app with cached data
-      } finally {
-        // Slight delay for smooth UX
-        setTimeout(() => setIsInitializing(false), 600)
-      }
+    // If no tokens → redirect to auth
+    if (!tokenStorage.hasTokens()) {
+      navigate('/auth', { replace: true })
     }
 
-    initialize()
-  }, [queryClient])
+    setTimeout(() => setIsInitializing(false), 400)
+  }, [navigate])
 
   if (isInitializing) {
     return <LoadingScreen />
   }
 
   return (
-    <LanguageProvider>
-      <div
-        className="min-h-screen relative"
-        style={{
-          background: '#F0F4FA',
-          maxWidth: '430px',
-          margin: '0 auto',
-        }}
-      >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/send" element={<Send />} />
-          <Route path="/receive" element={<Receive />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/kyc" element={<KYC />} />
-          <Route path="/card" element={<Card />} />
-          <Route path="/exchange" element={<Exchange />} />
-        </Routes>
+    <div
+      className="min-h-screen relative"
+      style={{
+        background: '#F0F4FA',
+        maxWidth: '430px',
+        margin: '0 auto',
+      }}
+    >
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/send" element={<Send />} />
+        <Route path="/receive" element={<Receive />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/kyc" element={<KYC />} />
+        <Route path="/card" element={<Card />} />
+        <Route path="/exchange" element={<Exchange />} />
+      </Routes>
 
-        <BottomNav />
-      </div>
+      {!isAuthRoute && <BottomNav />}
+    </div>
+  )
+}
+
+const App: React.FC = () => {
+  return (
+    <LanguageProvider>
+      <AppInner />
     </LanguageProvider>
   )
 }

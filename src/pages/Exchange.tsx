@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useLang } from '../contexts/LanguageContext'
-import { useBalance } from '../hooks/useBalance'
+import { useAccounts } from '../hooks/useBalance'
+import { useAllAssets } from '../hooks/useTokens'
 
-const ASSETS = [
+const MOCK_ASSETS = [
   { symbol: 'USDT', name: 'Tether USD', color: '#26A17B', price: 1.00 },
   { symbol: 'BTC', name: 'Bitcoin', color: '#F7931A', price: 67000 },
   { symbol: 'ETH', name: 'Ethereum', color: '#627EEA', price: 3500 },
@@ -11,7 +12,8 @@ const ASSETS = [
 
 const Exchange: React.FC = () => {
   const { lang, t } = useLang()
-  const { data: balance } = useBalance()
+  const { data: accounts = [] } = useAccounts()
+  const { data: assets = [] } = useAllAssets()
 
   const [fromSymbol, setFromSymbol] = useState('USDT')
   const [toSymbol, setToSymbol] = useState('BTC')
@@ -20,11 +22,13 @@ const Exchange: React.FC = () => {
   const [showToPicker, setShowToPicker] = useState(false)
   const [step, setStep] = useState<'form' | 'success'>('form')
 
-  const fromAsset = ASSETS.find(a => a.symbol === fromSymbol)!
-  const toAsset = ASSETS.find(a => a.symbol === toSymbol)!
+  const fromAsset = MOCK_ASSETS.find(a => a.symbol === fromSymbol)!
+  const toAsset = MOCK_ASSETS.find(a => a.symbol === toSymbol)!
 
-  const usdtBalance = balance?.balances?.find(b => b.currency === 'USDT' || b.symbol === 'USDT')
-  const available = fromSymbol === 'USDT' ? (usdtBalance?.amount ?? 0) : 0
+  // Get real balance for fromSymbol
+  const gwAsset = assets.find(a => a.symbol === fromSymbol && a.enabled)
+  const gwAccount = gwAsset ? accounts.find(a => a.asset_id === gwAsset.id && a.type === 'user') : undefined
+  const available = gwAccount ? parseFloat(gwAccount.balance) || 0 : 0
 
   const fromNum = parseFloat(fromAmount) || 0
   const rate = fromAsset.price / toAsset.price
@@ -39,7 +43,7 @@ const Exchange: React.FC = () => {
   }
 
   const handleExchange = () => {
-    if (!fromNum) return
+    if (!fromNum || fromNum > available) return
     window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
     setStep('success')
   }
@@ -85,7 +89,7 @@ const Exchange: React.FC = () => {
         >
           <div style={{ fontSize: 16, fontWeight: 700, color: '#111827', marginBottom: 16 }}>{t('selectAsset')}</div>
           <div className="space-y-2">
-            {ASSETS.map(asset => (
+            {MOCK_ASSETS.map(asset => (
               <div
                 key={asset.symbol}
                 className="flex items-center gap-3 p-4 rounded-2xl cursor-pointer active:opacity-70"
@@ -142,12 +146,15 @@ const Exchange: React.FC = () => {
               style={{ fontSize: 24, fontWeight: 700, color: '#111827', background: 'transparent', border: 'none', caretColor: '#2563EB' }}
             />
           </div>
-          {fromSymbol === 'USDT' && (
-            <div className="flex items-center justify-between mt-3" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 10 }}>
-              <span style={{ fontSize: 12, color: '#9CA3AF' }}>{t('available')}: {available.toFixed(2)} USDT</span>
-              <button onClick={() => setFromAmount(available.toFixed(2))} style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '3px 10px', borderRadius: 8, border: 'none' }}>{t('max')}</button>
-            </div>
-          )}
+          <div className="flex items-center justify-between mt-3" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 10 }}>
+            <span style={{ fontSize: 12, color: '#9CA3AF' }}>{t('available')}: {available.toFixed(2)} {fromSymbol}</span>
+            <button
+              onClick={() => setFromAmount(available.toFixed(2))}
+              style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '3px 10px', borderRadius: 8, border: 'none' }}
+            >
+              {t('max')}
+            </button>
+          </div>
         </div>
 
         {/* Swap button */}
@@ -197,14 +204,19 @@ const Exchange: React.FC = () => {
                 <span style={{ fontSize: 13, color: '#111827', fontWeight: bold ? 700 : 500 }}>{value}</span>
               </div>
             ))}
+            {fromNum > available && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #F3F4F6', fontSize: 13, color: '#DC2626', fontWeight: 500 }}>
+                Недостаточно средств
+              </div>
+            )}
           </div>
         )}
 
         <button
           onClick={handleExchange}
-          disabled={!fromNum || fromNum <= 0}
+          disabled={!fromNum || fromNum > available}
           className="w-full py-4 rounded-2xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-40"
-          style={{ background: '#2563EB', fontSize: 16, border: 'none', boxShadow: fromNum ? '0 6px 20px rgba(37,99,235,0.35)' : 'none' }}
+          style={{ background: '#2563EB', fontSize: 16, border: 'none', boxShadow: (fromNum && fromNum <= available) ? '0 6px 20px rgba(37,99,235,0.35)' : 'none' }}
         >
           {t('exchangeBtn')}
         </button>

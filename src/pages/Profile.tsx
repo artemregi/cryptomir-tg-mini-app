@@ -1,50 +1,54 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useProfile } from '../hooks/useProfile'
 import { useLang } from '../contexts/LanguageContext'
+import { updateProfile, logoutApi } from '../api/endpoints'
+import { tokenStorage } from '../api/client'
 
 const KYC_STATUS_KEY = 'cryptomir_kyc_status'
 
 const Profile: React.FC = () => {
   const navigate = useNavigate()
-  const { data: profile } = useProfile()
+  const queryClient = useQueryClient()
+  const { data: profile, isLoading: profileLoading } = useProfile()
   const { lang, toggle, t } = useLang()
 
-  const kycStatus = localStorage.getItem(KYC_STATUS_KEY) || 'none' // none | pending | verified
+  const kycStatus = localStorage.getItem(KYC_STATUS_KEY) || 'none'
 
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    username: '',
-  })
+  const [form, setForm] = useState({ full_name: '', username: '' })
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-    const stored = JSON.parse(localStorage.getItem('cryptomir_profile_form') || '{}')
-    setForm({
-      firstName: stored.firstName || profile?.first_name || tgUser?.first_name || '',
-      lastName: stored.lastName || profile?.last_name || tgUser?.last_name || '',
-      email: stored.email || '',
-      phone: stored.phone || '',
-      username: stored.username || tgUser?.username || '',
-    })
+    if (profile) {
+      setForm({
+        full_name: profile.full_name || '',
+        username: profile.username || '',
+      })
+    }
   }, [profile])
 
+  const saveMutation = useMutation({
+    mutationFn: () => updateProfile({ username: form.username, full_name: form.full_name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] })
+      setSaved(true)
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
+      setTimeout(() => setSaved(false), 2500)
+    },
+  })
+
   const handleSave = () => {
-    localStorage.setItem('cryptomir_profile_form', JSON.stringify(form))
-    setSaved(true)
-    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-    setTimeout(() => setSaved(false), 2500)
+    saveMutation.mutate()
   }
 
   const handleLogout = () => {
-    window.Telegram?.WebApp?.showConfirm(t('logoutConfirm'), (ok) => {
+    window.Telegram?.WebApp?.showConfirm(t('logoutConfirm'), async (ok) => {
       if (ok) {
-        localStorage.clear()
-        window.Telegram?.WebApp?.close()
+        try { await logoutApi() } catch { /* ignore */ }
+        tokenStorage.clear()
+        queryClient.clear()
+        navigate('/auth', { replace: true })
       }
     })
   }
@@ -78,6 +82,8 @@ const Profile: React.FC = () => {
 
   const labelStyle = { fontSize: 13, fontWeight: 600, color: '#6B7280', marginBottom: 6, display: 'block' } as React.CSSProperties
 
+  const displayName = form.full_name || form.username || profile?.email || 'Пользователь'
+
   return (
     <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#F0F4FA' }}>
       <div className="px-5 pt-5">
@@ -106,11 +112,15 @@ const Profile: React.FC = () => {
               <path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/>
             </svg>
           </div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>
-            {form.firstName || form.username || 'Пользователь'}
-          </div>
-          {form.username && (
-            <div style={{ fontSize: 13, color: '#9CA3AF' }}>@{form.username}</div>
+          {profileLoading ? (
+            <div style={{ height: 16, width: 120, borderRadius: 6, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+          ) : (
+            <>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#111827' }}>{displayName}</div>
+              {profile?.email && (
+                <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 2 }}>{profile.email}</div>
+              )}
+            </>
           )}
         </div>
 
@@ -144,38 +154,51 @@ const Profile: React.FC = () => {
           </div>
           <div className="space-y-4">
             <div>
-              <label style={labelStyle}>{t('firstName')}</label>
-              <input style={inputStyle} value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} placeholder={t('firstName')} />
-            </div>
-            <div>
-              <label style={labelStyle}>{t('lastName')}</label>
-              <input style={inputStyle} value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} placeholder={t('lastName')} />
-            </div>
-            <div>
-              <label style={labelStyle}>{t('email')}</label>
-              <input style={inputStyle} type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
-            </div>
-            <div>
-              <label style={labelStyle}>{t('phone')}</label>
-              <input style={inputStyle} type="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+7 000 000 00 00" />
+              <label style={labelStyle}>{lang === 'ru' ? 'Полное имя' : 'Full name'}</label>
+              <input
+                style={inputStyle}
+                value={form.full_name}
+                onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
+                placeholder={lang === 'ru' ? 'Ваше имя' : 'Your name'}
+              />
             </div>
             <div>
               <label style={labelStyle}>{t('username')}</label>
-              <input style={inputStyle} value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} placeholder="@username" />
+              <input
+                style={inputStyle}
+                value={form.username}
+                onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
+                placeholder="username"
+              />
             </div>
+            {profile?.email && (
+              <div>
+                <label style={labelStyle}>{t('email')}</label>
+                <input
+                  style={{ ...inputStyle, color: '#9CA3AF' }}
+                  value={profile.email}
+                  readOnly
+                />
+              </div>
+            )}
           </div>
+          {saveMutation.isError && (
+            <div style={{ marginTop: 12, fontSize: 13, color: '#DC2626' }}>
+              {lang === 'ru' ? 'Ошибка сохранения' : 'Save failed'}
+            </div>
+          )}
           <button
             onClick={handleSave}
-            className="w-full mt-5 py-4 rounded-2xl font-semibold text-white active:scale-95 transition-transform"
+            disabled={saveMutation.isPending}
+            className="w-full mt-5 py-4 rounded-2xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60"
             style={{ background: saved ? '#059669' : '#2563EB', fontSize: 15, border: 'none', boxShadow: saved ? '0 6px 20px rgba(5,150,105,0.35)' : '0 6px 20px rgba(37,99,235,0.35)' }}
           >
-            {saved ? '✓ ' + t('profileSaved') : t('save')}
+            {saveMutation.isPending ? (lang === 'ru' ? 'Сохранение...' : 'Saving...') : saved ? '✓ ' + t('profileSaved') : t('save')}
           </button>
         </div>
 
         {/* Language + Support */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}>
-          {/* Language toggle */}
           <div
             className="flex items-center justify-between p-4 cursor-pointer active:opacity-70"
             style={{ borderBottom: '1px solid #F3F4F6' }}
@@ -190,10 +213,7 @@ const Profile: React.FC = () => {
               </div>
               <span style={{ fontSize: 14, fontWeight: 500, color: '#111827' }}>{t('language')}</span>
             </div>
-            <div
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl"
-              style={{ background: '#EFF6FF' }}
-            >
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl" style={{ background: '#EFF6FF' }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#2563EB' }}>{lang === 'ru' ? 'RU' : 'EN'}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round">
                 <polyline points="6 9 12 15 18 9"/>
@@ -201,7 +221,6 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          {/* Support */}
           <div
             className="flex items-center justify-between p-4 cursor-pointer active:opacity-70"
             onClick={() => window.Telegram?.WebApp?.openTelegramLink('https://t.me/angelinaadminka')}
@@ -229,6 +248,13 @@ const Profile: React.FC = () => {
           {t('logout')}
         </button>
       </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   )
 }

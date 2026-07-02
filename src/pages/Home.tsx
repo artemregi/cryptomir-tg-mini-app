@@ -2,22 +2,30 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import BalanceCard from '../components/BalanceCard'
 import { useProfile } from '../hooks/useProfile'
-import { useTokens } from '../hooks/useTokens'
-import { useTransactions } from '../hooks/useTransactions'
-import { formatAmountWithSign, formatDateShort } from '../utils/format'
+import { useAccounts } from '../hooks/useBalance'
+import { useAllAssets } from '../hooks/useTokens'
 
 const Home: React.FC = () => {
   const navigate = useNavigate()
   const { data: profile } = useProfile()
-  const { data: tokens, isLoading: tokensLoading } = useTokens()
-  const { data: transactionsData, isLoading: txLoading } = useTransactions()
+  const { data: accounts = [], isLoading: accountsLoading } = useAccounts()
+  const { data: assets = [], isLoading: assetsLoading } = useAllAssets()
 
-  const recentTransactions = transactionsData?.items?.slice(0, 3) || []
+  const tokensLoading = accountsLoading || assetsLoading
 
   const firstName =
-    profile?.first_name ||
+    profile?.full_name?.split(' ')[0] ||
+    profile?.username ||
     window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name ||
     'пользователь'
+
+  // Build asset+balance list
+  const assetBalances = assets
+    .filter(a => a.enabled)
+    .map(asset => {
+      const account = accounts.find(ac => ac.asset_id === asset.id && ac.type === 'user')
+      return { ...asset, balance: account ? parseFloat(account.balance) || 0 : 0 }
+    })
 
   const handleAction = (path: string) => {
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium')
@@ -191,23 +199,45 @@ const Home: React.FC = () => {
         </div>
 
         <div className="space-y-2.5">
-          {/* USDT — active */}
           {tokensLoading ? (
-            <div style={{ height: 72, borderRadius: 16, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
-          ) : (
-            <div
-              className="flex items-center gap-3.5"
-              style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px' }}
-            >
+            <>
+              {[1, 2].map(i => (
+                <div key={i} style={{ height: 72, borderRadius: 16, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+              ))}
+            </>
+          ) : assetBalances.length > 0 ? (
+            assetBalances.map(asset => (
               <div
-                className="flex items-center justify-center flex-shrink-0"
-                style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#26A17B,#1E8A68)', boxShadow: '0 3px 10px rgba(38,161,123,0.25)' }}
+                key={asset.id}
+                className="flex items-center gap-3.5"
+                style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px' }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 7h16" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  <line x1="12" y1="7" x2="12" y2="21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  <path d="M7.5 12.5h9" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
+                <div
+                  className="flex items-center justify-center flex-shrink-0"
+                  style={{ width: 44, height: 44, borderRadius: '50%', background: asset.symbol === 'USDT' ? 'linear-gradient(135deg,#26A17B,#1E8A68)' : 'linear-gradient(135deg,#374151,#6B7280)', boxShadow: '0 3px 10px rgba(0,0,0,0.15)' }}
+                >
+                  <span style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>{asset.symbol.charAt(0)}</span>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{asset.symbol}</span>
+                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#ECFDF5', color: '#059669', fontWeight: 600 }}>Активен</span>
+                  </div>
+                  <div style={{ color: '#9CA3AF', fontSize: 13 }}>{asset.name}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
+                    {asset.balance.toFixed(2)}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>$0.00</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            /* Fallback: show USDT placeholder */
+            <div className="flex items-center gap-3.5" style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px' }}>
+              <div className="flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#26A17B,#1E8A68)', boxShadow: '0 3px 10px rgba(38,161,123,0.25)' }}>
+                <span style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>U</span>
               </div>
               <div style={{ flex: 1 }}>
                 <div className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
@@ -217,9 +247,7 @@ const Home: React.FC = () => {
                 <div style={{ color: '#9CA3AF', fontSize: 13 }}>Tether USD</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
-                  {(tokens?.find(t => t.symbol === 'USDT')?.balance ?? 0).toFixed(2)}
-                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>0.00</div>
                 <div style={{ fontSize: 12, color: '#9CA3AF' }}>$0.00</div>
               </div>
             </div>
@@ -227,17 +255,8 @@ const Home: React.FC = () => {
 
           {/* Coming soon tokens */}
           {comingSoonTokens.map((token) => (
-            <div
-              key={token.symbol}
-              className="flex items-center gap-3.5"
-              style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px', opacity: 0.4 }}
-            >
-              <div
-                className="flex items-center justify-center flex-shrink-0"
-                style={{ width: 44, height: 44, borderRadius: '50%', background: token.gradient }}
-              >
-                {token.icon}
-              </div>
+            <div key={token.symbol} className="flex items-center gap-3.5" style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 10px rgba(0,0,0,0.05)', padding: '14px 16px', opacity: 0.4 }}>
+              <div className="flex items-center justify-center flex-shrink-0" style={{ width: 44, height: 44, borderRadius: '50%', background: token.gradient }}>{token.icon}</div>
               <div style={{ flex: 1 }}>
                 <div className="flex items-center gap-1.5" style={{ marginBottom: 2 }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: '#6B7280' }}>{token.symbol}</span>

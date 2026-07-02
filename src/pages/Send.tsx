@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { createWithdrawal, getNetworks } from '../api/endpoints'
-import { useBalance } from '../hooks/useBalance'
-import { useProfile } from '../hooks/useProfile'
+import { useMutation } from '@tanstack/react-query'
+import { createWithdrawal } from '../api/endpoints'
+import { useAccounts } from '../hooks/useBalance'
+import { useNetworks, useAllAssets } from '../hooks/useTokens'
 import { isValidTronAddress, formatNumber } from '../utils/format'
 
 type SendStep = 'form' | 'confirm' | 'success' | 'error'
@@ -22,32 +22,26 @@ const BackButton = ({ onBack }: { onBack: () => void }) => (
 
 const Send: React.FC = () => {
   const navigate = useNavigate()
-  const { data: profile } = useProfile()
-  const { data: balance } = useBalance()
+  const { data: accounts = [] } = useAccounts()
+  const { data: assets = [] } = useAllAssets()
   const [step, setStep] = useState<SendStep>('form')
   const [address, setAddress] = useState('')
   const [amount, setAmount] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-  const [withdrawalId, setWithdrawalId] = useState<string | null>(null)
 
-  const { data: networksData } = useQuery({
-    queryKey: ['networks'],
-    queryFn: async () => {
-      const response = await getNetworks()
-      if (response.success) return response.data
-      throw new Error('Failed to fetch networks')
-    },
-  })
+  // Find USDT asset
+  const usdtAsset = assets.find(a => a.symbol === 'USDT' && a.enabled)
 
-  const network = Array.isArray(networksData) ? networksData[0] : null
-  const fee = network?.fee || 1
-  const minAmount = network?.min_withdrawal || 1
-  const maxAmount = network?.max_withdrawal || 10000
+  // Find USDT balance from user accounts
+  const usdtAccount = accounts.find(a => a.type === 'user' && usdtAsset && a.asset_id === usdtAsset.id)
+  const availableBalance = usdtAccount ? parseFloat(usdtAccount.balance) || 0 : 0
 
-  const usdtBalance = balance?.balances?.find(
-    (b) => b.currency === 'USDT' || b.symbol === 'USDT'
-  )
-  const availableBalance = usdtBalance?.amount || 0
+  // Fee calculation from asset config
+  const feeFixed = usdtAsset ? parseFloat(usdtAsset.comission_fix) || 0 : 1
+  const feePercent = usdtAsset ? parseFloat(usdtAsset.comission_percentage) || 0 : 0
+  const amountNum = parseFloat(amount) || 0
+  const fee = feeFixed + (amountNum * feePercent / 100)
+  const minAmount = usdtAsset ? parseFloat(usdtAsset.min_withdraw_amount) || 1 : 1
 
   const handleBack = useCallback(() => {
     if (step === 'confirm') { setStep('form'); return }
@@ -65,21 +59,14 @@ const Send: React.FC = () => {
   }, [handleBack])
 
   const withdrawMutation = useMutation({
-    mutationFn: createWithdrawal,
-    onSuccess: (data) => {
-      if (data.success) {
-        setWithdrawalId(data.data.id)
-        setStep('success')
-        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-      } else {
-        setErrorMsg('Не удалось выполнить перевод')
-        setStep('error')
-        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error')
-      }
+    mutationFn: () => createWithdrawal(usdtAsset!.id, amountNum.toString(), address),
+    onSuccess: () => {
+      setStep('success')
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
     },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || err?.message || 'Произошла ошибка'
-      setErrorMsg(msg)
+    onError: (err: unknown) => {
+      const e = err as { response?: { data?: { message?: string } }; message?: string }
+      setErrorMsg(e?.response?.data?.message || e?.message || 'Произошла ошибка')
       setStep('error')
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error')
     },
@@ -87,12 +74,10 @@ const Send: React.FC = () => {
 
   const addressError = address && !isValidTronAddress(address)
     ? 'Адрес должен начинаться с T и содержать 34 символа' : ''
-  const amountNum = parseFloat(amount) || 0
   const amountError = amount
     ? amountNum < minAmount ? `Минимум ${minAmount} USDT`
-    : amountNum > maxAmount ? `Максимум ${maxAmount} USDT`
-    : amountNum > availableBalance ? 'Недостаточно средств' : '' : ''
-  const isFormValid = isValidTronAddress(address) && amountNum >= minAmount && amountNum <= availableBalance && !amountError
+    : amountNum + fee > availableBalance ? 'Недостаточно средств' : '' : ''
+  const isFormValid = isValidTronAddress(address) && amountNum >= minAmount && amountNum + fee <= availableBalance && !amountError && !!usdtAsset
   const totalDeducted = amountNum + fee
 
   const handleSubmitForm = () => {
@@ -100,11 +85,7 @@ const Send: React.FC = () => {
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium')
     setStep('confirm')
   }
-  const handleConfirm = () => {
-    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('heavy')
-    if (!profile?.id) return
-    withdrawMutation.mutate({ account_id: profile.id, to: address, amount: amountNum, mode: 'standard' })
-  }
+
   const handleSetMax = () => {
     setAmount(Math.max(0, availableBalance - fee).toFixed(2))
     window.Telegram?.WebApp?.HapticFeedback?.selectionChanged()
@@ -119,8 +100,8 @@ const Send: React.FC = () => {
       <p style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 4 }}>{formatNumber(amountNum, 2)} USDT отправлены</p>
       <p style={{ fontSize: 12, color: '#9CA3AF', fontFamily: 'monospace', textAlign: 'center', marginBottom: 32, wordBreak: 'break-all', padding: '0 16px' }}>{address}</p>
       <div className="flex gap-3 w-full">
-        <button onClick={() => { setStep('form'); setAddress(''); setAmount('') }} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15 }}>Ещё раз</button>
-        <button onClick={() => navigate('/')} className="flex-1 py-4 rounded-2xl font-semibold text-white" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15 }}>На главную</button>
+        <button onClick={() => { setStep('form'); setAddress(''); setAmount('') }} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15, border: 'none' }}>Ещё раз</button>
+        <button onClick={() => navigate('/')} className="flex-1 py-4 rounded-2xl font-semibold text-white" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15, border: 'none' }}>На главную</button>
       </div>
     </div>
   )
@@ -133,8 +114,8 @@ const Send: React.FC = () => {
       <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 8 }}>Ошибка</h2>
       <p style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 32 }}>{errorMsg}</p>
       <div className="flex gap-3 w-full">
-        <button onClick={() => setStep('form')} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15 }}>Назад</button>
-        <button onClick={handleConfirm} className="flex-1 py-4 rounded-2xl font-semibold text-white" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15 }}>Повторить</button>
+        <button onClick={() => setStep('form')} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15, border: 'none' }}>Назад</button>
+        <button onClick={() => withdrawMutation.mutate()} className="flex-1 py-4 rounded-2xl font-semibold text-white" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15, border: 'none' }}>Повторить</button>
       </div>
     </div>
   )
@@ -149,8 +130,8 @@ const Send: React.FC = () => {
         {[
           { label: 'Получатель', value: address, mono: true },
           { label: 'Сумма', value: `${formatNumber(amountNum, 2)} USDT` },
-          { label: 'Комиссия', value: `${formatNumber(fee, 2)} USDT` },
-          { label: 'Итого', value: `${formatNumber(totalDeducted, 2)} USDT`, bold: true },
+          { label: 'Комиссия', value: `${formatNumber(fee, 4)} USDT` },
+          { label: 'Итого', value: `${formatNumber(totalDeducted, 4)} USDT`, bold: true },
         ].map(({ label, value, mono, bold }, i, arr) => (
           <div key={label} className="flex items-start justify-between p-4" style={{ borderBottom: i < arr.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
             <span style={{ fontSize: 14, color: '#6B7280' }}>{label}</span>
@@ -165,8 +146,8 @@ const Send: React.FC = () => {
         <p style={{ fontSize: 13, color: '#92400E' }}>Транзакции в сети TRON необратимы. Убедитесь в правильности адреса.</p>
       </div>
       <div className="flex gap-3 mt-auto">
-        <button onClick={() => setStep('form')} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15 }}>Отмена</button>
-        <button onClick={handleConfirm} disabled={withdrawMutation.isPending} className="flex-1 py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15 }}>
+        <button onClick={() => setStep('form')} className="flex-1 py-4 rounded-2xl font-semibold" style={{ background: '#F3F4F6', color: '#374151', fontSize: 15, border: 'none' }}>Отмена</button>
+        <button onClick={() => withdrawMutation.mutate()} disabled={withdrawMutation.isPending} className="flex-1 py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform disabled:opacity-60" style={{ background: '#2563EB', boxShadow: '0 6px 20px rgba(37,99,235,0.35)', fontSize: 15, border: 'none' }}>
           {withdrawMutation.isPending ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/><path d="M12 2a10 10 0 0110 10" stroke="white" strokeWidth="3" strokeLinecap="round"/></svg>
@@ -178,7 +159,6 @@ const Send: React.FC = () => {
     </div>
   )
 
-  // Main form
   return (
     <div className="min-h-screen flex flex-col px-5 pt-5 pb-24 animate-fade-in" style={{ background: '#F0F4FA' }}>
       <div className="flex items-center gap-3.5 mb-7">
@@ -186,11 +166,8 @@ const Send: React.FC = () => {
         <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', letterSpacing: '-0.02em' }}>Отправить</h1>
       </div>
 
-      {/* Amount display card — blue gradient */}
-      <div
-        className="text-center mb-5"
-        style={{ background: 'linear-gradient(145deg,#EFF6FF,#DBEAFE)', border: '1.5px solid #BFDBFE', borderRadius: 22, padding: 26 }}
-      >
+      {/* Amount display card */}
+      <div className="text-center mb-5" style={{ background: 'linear-gradient(145deg,#EFF6FF,#DBEAFE)', border: '1.5px solid #BFDBFE', borderRadius: 22, padding: 26 }}>
         <div style={{ color: '#6B7280', fontSize: 12, fontWeight: 500, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Сумма перевода</div>
         <div style={{ fontSize: 52, fontWeight: 700, color: '#111827', letterSpacing: '-0.04em', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
           {amount || '0.00'}
@@ -224,7 +201,7 @@ const Send: React.FC = () => {
             }}
           />
           {address && (
-            <button onClick={() => setAddress('')} className="absolute top-3 right-3" style={{ color: '#9CA3AF' }}>
+            <button onClick={() => setAddress('')} className="absolute top-3 right-3" style={{ color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           )}
@@ -247,9 +224,9 @@ const Send: React.FC = () => {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
             className="outline-none bg-transparent"
-            style={{ fontSize: 15, color: amount ? '#111827' : '#9CA3AF', fontWeight: 400, width: '100%', caretColor: '#2563EB' }}
+            style={{ fontSize: 15, color: amount ? '#111827' : '#9CA3AF', fontWeight: 400, width: '100%', caretColor: '#2563EB', border: 'none' }}
           />
-          <button onClick={handleSetMax} style={{ fontSize: 13, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '5px 12px', borderRadius: 8, flexShrink: 0, marginLeft: 8 }}>
+          <button onClick={handleSetMax} style={{ fontSize: 13, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '5px 12px', borderRadius: 8, flexShrink: 0, marginLeft: 8, border: 'none', cursor: 'pointer' }}>
             MAX
           </button>
         </div>
@@ -265,9 +242,9 @@ const Send: React.FC = () => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          <span style={{ color: '#6B7280', fontSize: 14 }}>Комиссия сети</span>
+          <span style={{ color: '#6B7280', fontSize: 14 }}>Комиссия</span>
         </div>
-        <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>~{fee} TRX</span>
+        <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>~{formatNumber(fee, 4)} USDT</span>
       </div>
 
       {/* Submit */}

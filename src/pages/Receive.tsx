@@ -1,13 +1,30 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { QRCodeSVG } from 'qrcode.react'
-import { useProfile, useTronAddress } from '../hooks/useProfile'
+import { useQuery } from '@tanstack/react-query'
+import { getDepositWallet } from '../api/endpoints'
+import { useNetworks } from '../hooks/useTokens'
+import { useLang } from '../contexts/LanguageContext'
 
 const Receive: React.FC = () => {
   const navigate = useNavigate()
-  const { data: profile, isLoading } = useProfile()
-  const tronAddress = useTronAddress()
+  const { t, lang } = useLang()
   const [copied, setCopied] = useState(false)
+
+  const { data: networks = [] } = useNetworks()
+
+  // Use first enabled network (prefer Tron by name)
+  const tronNetwork = networks.find(n => n.enabled && n.name.toLowerCase().includes('tron'))
+    || networks.find(n => n.enabled)
+
+  const { data: depositWallet, isLoading } = useQuery({
+    queryKey: ['deposit-wallet', tronNetwork?.id],
+    queryFn: () => getDepositWallet(tronNetwork!.id),
+    enabled: !!tronNetwork?.id,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const address = depositWallet?.address || ''
+  const qrBase64 = depositWallet?.qr_code_png_base64 || ''
 
   const handleBack = useCallback(() => {
     window.Telegram?.WebApp?.BackButton?.hide()
@@ -24,12 +41,12 @@ const Receive: React.FC = () => {
   }, [handleBack])
 
   const handleCopy = async () => {
-    if (!tronAddress) return
+    if (!address) return
     try {
-      await navigator.clipboard.writeText(tronAddress)
+      await navigator.clipboard.writeText(address)
     } catch {
       const el = document.createElement('textarea')
-      el.value = tronAddress
+      el.value = address
       document.body.appendChild(el)
       el.select()
       document.execCommand('copy')
@@ -54,7 +71,9 @@ const Receive: React.FC = () => {
               <polyline points="15 18 9 12 15 6"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', letterSpacing: '-0.02em' }}>Получить</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111827', letterSpacing: '-0.02em' }}>
+            {t('receiveTitle')}
+          </h1>
         </div>
 
         {/* QR Card */}
@@ -63,19 +82,23 @@ const Receive: React.FC = () => {
           style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)', padding: 24 }}
         >
           <div style={{ color: '#9CA3AF', fontSize: 13, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
-            Ваш USDT адрес
+            {lang === 'ru' ? 'Ваш USDT адрес' : 'Your USDT address'}
           </div>
 
           {/* QR */}
           <div
             className="flex items-center justify-center mb-4 relative"
-            style={{ background: '#FFFFFF', border: '1.5px solid #F3F4F6', borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+            style={{ background: '#FFFFFF', borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
           >
-            {isLoading || !tronAddress ? (
+            {isLoading || !qrBase64 ? (
               <div style={{ width: 160, height: 160, borderRadius: 10, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
             ) : (
-              <>
-                <QRCodeSVG value={tronAddress} size={160} bgColor="#FFFFFF" fgColor="#111827" level="M" includeMargin={false} />
+              <div className="relative">
+                <img
+                  src={`data:image/png;base64,${qrBase64}`}
+                  alt="QR Code"
+                  style={{ width: 160, height: 160, borderRadius: 10, display: 'block' }}
+                />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: '#2563EB', boxShadow: '0 2px 10px rgba(37,99,235,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -84,7 +107,7 @@ const Receive: React.FC = () => {
                     </svg>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
 
@@ -96,11 +119,11 @@ const Receive: React.FC = () => {
             {isLoading ? (
               <div style={{ flex: 1, height: 16, borderRadius: 6, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
             ) : (
-              <span style={{ fontSize: 14, color: '#6B7280', fontFamily: 'monospace', letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                {tronAddress || 'Адрес недоступен'}
+              <span style={{ fontSize: 13, color: '#6B7280', fontFamily: 'monospace', letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {address || (lang === 'ru' ? 'Адрес недоступен' : 'Address unavailable')}
               </span>
             )}
-            <button onClick={handleCopy} disabled={!tronAddress || isLoading} className="active:opacity-70 transition-opacity disabled:opacity-30 flex-shrink-0 ml-3">
+            <button onClick={handleCopy} disabled={!address || isLoading} className="active:opacity-70 transition-opacity disabled:opacity-30 flex-shrink-0 ml-3">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
@@ -112,14 +135,19 @@ const Receive: React.FC = () => {
         {/* Copy button */}
         <button
           onClick={handleCopy}
-          disabled={!tronAddress || isLoading}
+          disabled={!address || isLoading}
           className="w-full flex items-center justify-center gap-2 mb-3 active:scale-95 transition-all disabled:opacity-40"
           style={{ background: copied ? '#059669' : '#2563EB', border: 'none', borderRadius: 16, padding: 18, color: '#FFFFFF', fontSize: 16, fontWeight: 600, boxShadow: copied ? '0 6px 20px rgba(5,150,105,0.35)' : '0 6px 20px rgba(37,99,235,0.35)' }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            {copied ? <polyline points="20 6 9 17 4 12"/> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>}
+            {copied
+              ? <polyline points="20 6 9 17 4 12"/>
+              : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>
+            }
           </svg>
-          {copied ? 'Скопировано!' : 'Скопировать адрес'}
+          {copied
+            ? t('copied')
+            : t('copy') + ' ' + (lang === 'ru' ? 'адрес' : 'address')}
         </button>
 
         {/* Warning */}
@@ -132,7 +160,9 @@ const Receive: React.FC = () => {
             <line x1="12" y1="9" x2="12" y2="13"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          <span style={{ fontSize: 13, color: '#D97706', fontWeight: 500 }}>Принимает только USDT TRC-20</span>
+          <span style={{ fontSize: 13, color: '#D97706', fontWeight: 500 }}>
+            {lang === 'ru' ? 'Принимает только USDT TRC-20' : 'Accepts only USDT TRC-20'}
+          </span>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useBalance } from '../hooks/useBalance'
+import { useAccounts } from '../hooks/useBalance'
+import { useAllAssets } from '../hooks/useTokens'
 import { useLang } from '../contexts/LanguageContext'
 
 const KYC_STATUS_KEY = 'cryptomir_kyc_status'
@@ -34,7 +35,8 @@ function generateCard(holder: string): CardData {
 const Card: React.FC = () => {
   const navigate = useNavigate()
   const { lang, t } = useLang()
-  const { data: balance } = useBalance()
+  const { data: accounts = [] } = useAccounts()
+  const { data: assets = [] } = useAllAssets()
 
   const kycStatus = localStorage.getItem(KYC_STATUS_KEY) || 'none'
   const kycPassed = kycStatus === 'verified' || kycStatus === 'pending'
@@ -73,8 +75,10 @@ const Card: React.FC = () => {
     if (!card || !topUpAmount) return
     const amount = parseFloat(topUpAmount)
     if (isNaN(amount) || amount <= 0) return
-    const usdtBal = balance?.balances?.find(b => b.currency === 'USDT' || b.symbol === 'USDT')
-    if ((usdtBal?.amount || 0) < amount) {
+    const usdtAsset = assets.find(a => a.symbol === 'USDT' && a.enabled)
+    const usdtAccount = usdtAsset ? accounts.find(a => a.asset_id === usdtAsset.id && a.type === 'user') : undefined
+    const usdtBalance = parseFloat(usdtAccount?.balance || '0') || 0
+    if (usdtBalance < amount) {
       window.Telegram?.WebApp?.showAlert(lang === 'ru' ? 'Недостаточно средств в кошельке' : 'Insufficient wallet balance')
       return
     }

@@ -1,6 +1,17 @@
 import React from 'react'
-import type { Transaction } from '../types'
 import { formatAmountWithSign, formatDateShort, shortenAddress } from '../utils/format'
+
+interface Transaction {
+  id: string
+  type: 'send' | 'top_up'
+  amount: number
+  status: string
+  to_address?: string
+  from_address?: string
+  date?: string
+  created_at?: string
+  tx_hash?: string
+}
 
 interface TransactionItemProps {
   transaction: Transaction

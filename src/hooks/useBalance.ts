@@ -1,19 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBalance } from '../api/endpoints'
-import type { BalanceData } from '../types'
+import { getAccounts } from '../api/endpoints'
+import { tokenStorage } from '../api/client'
+import type { GWAccount } from '../types'
 
-export const useBalance = () => {
+export const useAccounts = () => {
   return useQuery({
-    queryKey: ['balance'],
-    queryFn: async (): Promise<BalanceData> => {
-      const response = await getBalance()
-      if (response.success) {
-        return response.data
-      }
-      throw new Error('Failed to fetch balance')
+    queryKey: ['accounts'],
+    queryFn: async (): Promise<GWAccount[]> => {
+      return await getAccounts()
     },
+    enabled: tokenStorage.hasTokens(),
     refetchInterval: 30 * 1000,
     staleTime: 15 * 1000,
-    retry: 2,
+    retry: 1,
   })
 }
+
+// backward compat alias
+export const useBalance = useAccounts
