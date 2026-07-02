@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LanguageContext'
-
-const KYC_STATUS_KEY = 'cryptomir_kyc_status'
+import { useProfile } from '../hooks/useProfile'
+import { useKycStatus, useSubmitKyc, useResubmitKyc } from '../hooks/useKyc'
+import type { CPDocType } from '../types/cardplus'
 
 const COUNTRIES_RU = [
   'Россия', 'Беларусь', 'Казахстан', 'Украина', 'Узбекистан', 'Азербайджан',
@@ -24,25 +25,56 @@ const COUNTRIES_EN = [
   'Other country',
 ]
 
+const DOC_TYPES: { value: CPDocType; labelRu: string; labelEn: string }[] = [
+  { value: 'PASSPORT',         labelRu: 'Паспорт',              labelEn: 'Passport' },
+  { value: 'ID_CARD',          labelRu: 'Удостоверение личности', labelEn: 'ID Card' },
+  { value: 'DRIVING_LICENSE',  labelRu: 'Водительское удостоверение', labelEn: 'Driver\'s License' },
+]
+
 const KYC: React.FC = () => {
-  const navigate = useNavigate()
+  const navigate   = useNavigate()
   const { lang, t } = useLang()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { data: profile } = useProfile()
+  const { data: kycInfo } = useKycStatus()
+  const submitMutation    = useSubmitKyc()
+  const resubmitMutation  = useResubmitKyc()
+  const fileInputRef      = useRef<HTMLInputElement>(null)
+
+  const kycStatus = kycInfo?.cardAccountStatus ?? 'NOT_SUBMITTED'
+  const isResubmit = kycStatus === 'REJECTED' || kycStatus === 'REQUIRE_DOC_UPDATE'
 
   const [step, setStep] = useState<'form' | 'sent'>('form')
   const [country, setCountry] = useState('')
   const [customCountry, setCustomCountry] = useState('')
   const [showCountryList, setShowCountryList] = useState(false)
-  const [passportSeries, setPassportSeries] = useState('')
-  const [passportNumber, setPassportNumber] = useState('')
+  const [docType, setDocType] = useState<CPDocType>('PASSPORT')
+  const [docNumber, setDocNumber] = useState('')
+  const [birthDate, setBirthDate] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [sending, setSending] = useState(false)
   const [validationError, setValidationError] = useState('')
 
   const countries = lang === 'ru' ? COUNTRIES_RU : COUNTRIES_EN
   const isOther = country === countries[countries.length - 1]
   const finalCountry = isOther ? customCountry : country
+
+  // Prefill name from profile
+  useEffect(() => {
+    if (profile) {
+      const parts = (profile.full_name || '').split(' ')
+      setFirstName(parts[0] || '')
+      setLastName(parts.slice(1).join(' ') || '')
+    }
+  }, [profile])
+
+  // If already approved or pending — show status screen
+  useEffect(() => {
+    if (kycStatus === 'APPROVED' || kycStatus === 'PENDING_REVIEW') {
+      setStep('sent')
+    }
+  }, [kycStatus])
 
   const handleBack = useCallback(() => navigate('/profile'), [navigate])
 
@@ -66,46 +98,57 @@ const KYC: React.FC = () => {
 
   const handleSubmit = async () => {
     setValidationError('')
-    if (!passportNumber.trim()) {
-      setValidationError(t('kycRequired'))
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setValidationError(lang === 'ru' ? 'Введите имя и фамилию' : 'Enter first and last name')
+      return
+    }
+    if (!birthDate) {
+      setValidationError(lang === 'ru' ? 'Введите дату рождения' : 'Enter date of birth')
+      return
+    }
+    if (!finalCountry) {
+      setValidationError(lang === 'ru' ? 'Выберите страну' : 'Select country')
+      return
+    }
+    if (!docNumber.trim()) {
+      setValidationError(lang === 'ru' ? 'Введите номер документа' : 'Enter document number')
       return
     }
     if (!photo) {
-      setValidationError(t('kycRequired'))
+      setValidationError(lang === 'ru' ? 'Загрузите фото документа' : 'Upload document photo')
       return
     }
 
-    setSending(true)
-    try {
-      const profileData = JSON.parse(localStorage.getItem('cryptomir_profile_form') || '{}')
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+    // TODO: upload photo to S3/CDN and get URL — for now use placeholder
+    // When CardPlus integration is live, upload photo first and use returned URL
+    const docFrontUrl = 'mock://document_pending_upload'
 
-      const formData = new FormData()
-      formData.append('_subject', 'KYC Verification — CryptoMIR')
-      formData.append('_captcha', 'false')
-      formData.append('telegram_id', String(tgUser?.id || ''))
-      formData.append('name', `${profileData.firstName || tgUser?.first_name || ''} ${profileData.lastName || tgUser?.last_name || ''}`.trim())
-      formData.append('email', profileData.email || '')
-      formData.append('phone', profileData.phone || '')
-      formData.append('username', `@${profileData.username || tgUser?.username || ''}`)
-      formData.append('country', finalCountry)
-      formData.append('passport_series', passportSeries)
-      formData.append('passport_number', passportNumber)
-      if (photo) formData.append('document_photo', photo, photo.name)
-
-      await fetch('https://formsubmit.co/Alex773cyber@gmail.com', {
-        method: 'POST',
-        body: formData,
-      })
-    } catch {
-      // Non-fatal — still mark as pending
+    const params = {
+      email:       profile?.email || '',
+      firstName:   firstName.trim(),
+      lastName:    lastName.trim(),
+      birthDate,
+      nationality: finalCountry,
+      docType,
+      docNumber:   docNumber.trim(),
+      docFrontUrl,
+      phone:       '',
     }
 
-    localStorage.setItem(KYC_STATUS_KEY, 'pending')
-    window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
-    setSending(false)
-    setStep('sent')
+    const mutate = isResubmit ? resubmitMutation.mutate : submitMutation.mutate
+    mutate(params, {
+      onSuccess: () => {
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
+        setStep('sent')
+      },
+      onError: () => {
+        setValidationError(lang === 'ru' ? 'Ошибка отправки. Попробуйте снова.' : 'Submission error. Please try again.')
+      },
+    })
   }
+
+  const isPending = submitMutation.isPending || resubmitMutation.isPending
 
   const inputStyle: React.CSSProperties = {
     background: '#F9FAFB',
@@ -119,30 +162,60 @@ const KYC: React.FC = () => {
     fontFamily: 'inherit',
   }
 
+  const labelStyle: React.CSSProperties = {
+    fontSize: 13, fontWeight: 600, color: '#6B7280', marginBottom: 6, display: 'block',
+  }
+
+  // ── Status screen ──
   if (step === 'sent') {
+    const isApproved = kycStatus === 'APPROVED'
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-fade-in" style={{ background: '#F0F4FA' }}>
-        <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: '#ECFDF5', border: '2px solid #A7F3D0' }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+        <div
+          className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+          style={{
+            background: isApproved ? '#ECFDF5' : '#EFF6FF',
+            border: `2px solid ${isApproved ? '#A7F3D0' : '#BFDBFE'}`,
+          }}
+        >
+          {isApproved ? (
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          ) : (
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          )}
         </div>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 8, textAlign: 'center' }}>{t('kycSent')}</h2>
-        <p style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 32 }}>{t('kycSentDesc')}</p>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 8, textAlign: 'center' }}>
+          {isApproved
+            ? (lang === 'ru' ? 'KYC подтверждён!' : 'KYC approved!')
+            : t('kycSent')}
+        </h2>
+        <p style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 32, lineHeight: 1.6 }}>
+          {isApproved
+            ? (lang === 'ru' ? 'Вы можете выпустить виртуальную карту.' : 'You can now issue a virtual card.')
+            : t('kycSentDesc')}
+        </p>
         <button
-          onClick={() => navigate('/profile')}
+          onClick={() => navigate(isApproved ? '/card' : '/profile')}
           className="w-full py-4 rounded-2xl font-semibold text-white"
           style={{ background: '#2563EB', fontSize: 15, border: 'none', boxShadow: '0 6px 20px rgba(37,99,235,0.35)' }}
         >
-          {t('back')}
+          {isApproved
+            ? (lang === 'ru' ? 'Выпустить карту' : 'Issue card')
+            : t('back')}
         </button>
       </div>
     )
   }
 
+  // ── Form ──
   return (
     <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#F0F4FA' }}>
       <div className="px-5 pt-5">
+
         {/* Header */}
         <div className="flex items-center gap-3.5 mb-2">
           <div
@@ -158,13 +231,60 @@ const KYC: React.FC = () => {
         </div>
         <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 24, marginLeft: 52 }}>{t('kycDesc')}</p>
 
-        {/* Country selection */}
+        {/* Rejection reason */}
+        {isResubmit && kycInfo?.rejectReason && (
+          <div className="flex items-start gap-2.5 p-4 rounded-2xl mb-4" style={{ background: '#FEF2F2', border: '1.5px solid #FECACA' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.75" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p style={{ fontSize: 13, color: '#DC2626' }}>
+              {lang === 'ru' ? 'Причина отказа: ' : 'Rejection reason: '}{kycInfo.rejectReason}
+            </p>
+          </div>
+        )}
+
+        {/* Personal info */}
+        <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
+            {lang === 'ru' ? 'Личные данные' : 'Personal info'}
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label style={labelStyle}>{lang === 'ru' ? 'Имя' : 'First name'} *</label>
+              <input
+                style={inputStyle}
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder={lang === 'ru' ? 'Иван' : 'John'}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{lang === 'ru' ? 'Фамилия' : 'Last name'} *</label>
+              <input
+                style={inputStyle}
+                value={lastName}
+                onChange={e => setLastName(e.target.value)}
+                placeholder={lang === 'ru' ? 'Иванов' : 'Smith'}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{lang === 'ru' ? 'Дата рождения' : 'Date of birth'} *</label>
+              <input
+                style={inputStyle}
+                type="date"
+                value={birthDate}
+                onChange={e => setBirthDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Country */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
             {t('country')}
           </div>
-
-          {/* Dropdown trigger */}
           <div
             className="flex items-center justify-between cursor-pointer"
             style={{ background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: '14px 16px', marginBottom: 12 }}
@@ -177,19 +297,15 @@ const KYC: React.FC = () => {
               <polyline points={showCountryList ? '18 15 12 9 6 15' : '6 9 12 15 18 9'}/>
             </svg>
           </div>
-
-          {/* Country list */}
           {showCountryList && (
-            <div
-              className="overflow-y-auto mb-3"
-              style={{ maxHeight: 220, borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#FFFFFF' }}
-            >
+            <div className="overflow-y-auto mb-3" style={{ maxHeight: 220, borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#FFFFFF' }}>
               {countries.map((c) => (
                 <div
                   key={c}
-                  className="px-4 py-3 cursor-pointer active:bg-blue-50"
+                  className="px-4 py-3 cursor-pointer"
                   style={{
-                    fontSize: 14, color: c === country ? '#2563EB' : '#111827',
+                    fontSize: 14,
+                    color: c === country ? '#2563EB' : '#111827',
                     fontWeight: c === country ? 600 : 400,
                     borderBottom: '1px solid #F3F4F6',
                     background: c === country ? '#EFF6FF' : 'transparent',
@@ -201,8 +317,6 @@ const KYC: React.FC = () => {
               ))}
             </div>
           )}
-
-          {/* Manual input if "Other" */}
           {isOther && (
             <input
               style={inputStyle}
@@ -213,30 +327,43 @@ const KYC: React.FC = () => {
           )}
         </div>
 
-        {/* Passport data */}
+        {/* Document */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
             {lang === 'ru' ? 'Документ' : 'Document'}
           </div>
           <div className="space-y-4">
+            {/* Doc type */}
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#6B7280', marginBottom: 6, display: 'block' }}>{t('passportSeries')}</label>
-              <input
-                style={inputStyle}
-                value={passportSeries}
-                onChange={e => setPassportSeries(e.target.value.toUpperCase())}
-                placeholder={lang === 'ru' ? '1234' : '1234'}
-                maxLength={10}
-              />
+              <label style={labelStyle}>{lang === 'ru' ? 'Тип документа' : 'Document type'} *</label>
+              <div className="flex gap-2">
+                {DOC_TYPES.map(dt => (
+                  <button
+                    key={dt.value}
+                    onClick={() => setDocType(dt.value)}
+                    className="flex-1 py-2.5 rounded-xl text-center transition-all"
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      border: 'none',
+                      background: docType === dt.value ? '#EFF6FF' : '#F9FAFB',
+                      color: docType === dt.value ? '#2563EB' : '#6B7280',
+                      boxShadow: docType === dt.value ? '0 0 0 1.5px #2563EB' : '0 0 0 1.5px #E5E7EB',
+                    }}
+                  >
+                    {lang === 'ru' ? dt.labelRu.split(' ')[0] : dt.labelEn.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#6B7280', marginBottom: 6, display: 'block' }}>{t('passportNumber')} *</label>
+              <label style={labelStyle}>{lang === 'ru' ? 'Номер документа' : 'Document number'} *</label>
               <input
-                style={{ ...inputStyle, border: `1.5px solid ${passportNumber ? '#2563EB' : '#E5E7EB'}` }}
-                value={passportNumber}
-                onChange={e => setPassportNumber(e.target.value)}
-                placeholder={lang === 'ru' ? '567890' : '567890'}
-                maxLength={20}
+                style={{ ...inputStyle, border: `1.5px solid ${docNumber ? '#2563EB' : '#E5E7EB'}` }}
+                value={docNumber}
+                onChange={e => setDocNumber(e.target.value.toUpperCase())}
+                placeholder={lang === 'ru' ? '1234 567890' : '1234 567890'}
+                maxLength={30}
               />
             </div>
           </div>
@@ -247,7 +374,6 @@ const KYC: React.FC = () => {
           <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
             {t('uploadPhoto')} *
           </div>
-
           <input
             ref={fileInputRef}
             type="file"
@@ -256,7 +382,6 @@ const KYC: React.FC = () => {
             onChange={handlePhotoSelect}
             style={{ display: 'none' }}
           />
-
           {photoPreview ? (
             <div className="relative">
               <img
@@ -287,7 +412,7 @@ const KYC: React.FC = () => {
                 </svg>
               </div>
               <span style={{ fontSize: 14, fontWeight: 600, color: '#2563EB' }}>{t('uploadPhoto')}</span>
-              <span style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>JPG, PNG или PDF</span>
+              <span style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>JPG, PNG {lang === 'ru' ? 'или' : 'or'} PDF</span>
             </div>
           )}
         </div>
@@ -305,11 +430,11 @@ const KYC: React.FC = () => {
         {/* Submit */}
         <button
           onClick={handleSubmit}
-          disabled={sending}
+          disabled={isPending}
           className="w-full py-4 rounded-2xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-60"
           style={{ background: '#2563EB', fontSize: 16, border: 'none', boxShadow: '0 6px 20px rgba(37,99,235,0.35)' }}
         >
-          {sending ? (
+          {isPending ? (
             <span className="flex items-center justify-center gap-2">
               <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
@@ -317,7 +442,9 @@ const KYC: React.FC = () => {
               </svg>
               {t('loading')}
             </span>
-          ) : t('sendKYC')}
+          ) : isResubmit
+            ? (lang === 'ru' ? 'Отправить повторно' : 'Resubmit')
+            : t('sendKYC')}
         </button>
       </div>
     </div>
