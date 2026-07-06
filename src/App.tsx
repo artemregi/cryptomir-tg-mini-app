@@ -13,6 +13,7 @@ import Exchange from './pages/Exchange'
 import Auth from './pages/Auth'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { tokenStorage } from './api/client'
+import { tgAuth } from './api/endpoints'
 
 const AUTH_ROUTES = ['/auth']
 
@@ -27,12 +28,25 @@ const AppInner: React.FC = () => {
     window.Telegram?.WebApp?.ready()
     window.Telegram?.WebApp?.expand()
 
-    // If no tokens → redirect to auth
-    if (!tokenStorage.hasTokens()) {
-      navigate('/auth', { replace: true })
+    const init = async () => {
+      if (!tokenStorage.hasTokens()) {
+        const initData = window.Telegram?.WebApp?.initData
+        if (initData) {
+          try {
+            const tokens = await tgAuth(initData)
+            tokenStorage.set(tokens.access_token, tokens.refresh_token)
+            // stay on current route (will redirect to / below)
+          } catch {
+            navigate('/auth', { replace: true })
+          }
+        } else {
+          navigate('/auth', { replace: true })
+        }
+      }
+      setTimeout(() => setIsInitializing(false), 300)
     }
 
-    setTimeout(() => setIsInitializing(false), 400)
+    init()
   }, [navigate])
 
   if (isInitializing) {

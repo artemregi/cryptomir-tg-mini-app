@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LanguageContext'
 import { useProfile } from '../hooks/useProfile'
 import { useKycStatus, useSubmitKyc, useResubmitKyc } from '../hooks/useKyc'
+import { uploadKycPhoto } from '../api/endpoints'
 import type { CPDocType } from '../types/cardplus'
 
 const COUNTRIES_RU = [
@@ -54,6 +55,7 @@ const KYC: React.FC = () => {
   const [lastName, setLastName] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
   const [validationError, setValidationError] = useState('')
 
   const countries = lang === 'ru' ? COUNTRIES_RU : COUNTRIES_EN
@@ -120,9 +122,18 @@ const KYC: React.FC = () => {
       return
     }
 
-    // TODO: upload photo to S3/CDN and get URL — for now use placeholder
-    // When CardPlus integration is live, upload photo first and use returned URL
-    const docFrontUrl = 'mock://document_pending_upload'
+    let photoUrl: string
+    try {
+      setUploading(true)
+      const result = await uploadKycPhoto(photo)
+      photoUrl = result.url
+    } catch {
+      setUploading(false)
+      setValidationError(lang === 'ru' ? 'Ошибка загрузки фото. Попробуйте снова.' : 'Photo upload failed. Please try again.')
+      return
+    } finally {
+      setUploading(false)
+    }
 
     const params = {
       email:       profile?.email || '',
@@ -132,7 +143,7 @@ const KYC: React.FC = () => {
       nationality: finalCountry,
       docType,
       docNumber:   docNumber.trim(),
-      docFrontUrl,
+      photos:      photoUrl,
       phone:       '',
     }
 
@@ -148,7 +159,7 @@ const KYC: React.FC = () => {
     })
   }
 
-  const isPending = submitMutation.isPending || resubmitMutation.isPending
+  const isPending = uploading || submitMutation.isPending || resubmitMutation.isPending
 
   const inputStyle: React.CSSProperties = {
     background: '#F9FAFB',
@@ -440,7 +451,9 @@ const KYC: React.FC = () => {
                 <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
                 <path d="M12 2a10 10 0 0110 10" stroke="white" strokeWidth="3" strokeLinecap="round"/>
               </svg>
-              {t('loading')}
+              {uploading
+                ? (lang === 'ru' ? 'Загрузка фото...' : 'Uploading photo...')
+                : t('loading')}
             </span>
           ) : isResubmit
             ? (lang === 'ru' ? 'Отправить повторно' : 'Resubmit')

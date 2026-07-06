@@ -59,6 +59,11 @@ export const logoutApi = async (): Promise<void> => {
   await client.post('/api/v1/user/v1/logout')
 }
 
+export const tgAuth = async (initData: string): Promise<AuthTokens> => {
+  const { data } = await client.post('/api/v1/user/v1/tg_auth', { init_data: initData })
+  return data
+}
+
 // ============================================================
 // Profile
 // ============================================================
@@ -122,6 +127,19 @@ export const createWithdrawal = async (
     asset_id: assetId,
     amount,
     to_address: toAddress,
+  })
+  return data
+}
+
+// ============================================================
+// KYC document upload
+// ============================================================
+
+export const uploadKycPhoto = async (file: File): Promise<{ url: string }> => {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await client.post('/api/v1/kyc/v1/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   })
   return data
 }

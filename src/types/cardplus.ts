@@ -64,9 +64,7 @@ export interface CPKycSubmitParams {
   nationality: string   // country name or ISO code
   docType: CPDocType
   docNumber: string
-  docFrontUrl: string   // URL of uploaded document front photo
-  docBackUrl?: string
-  selfieUrl?: string
+  photos: string        // URL(s) of uploaded document photo(s)
   phone?: string
 }
 
