@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import BottomNav from './components/BottomNav'
 import LoadingScreen from './components/LoadingScreen'
 import Home from './pages/Home'
@@ -10,16 +10,15 @@ import Profile from './pages/Profile'
 import KYC from './pages/KYC'
 import Card from './pages/Card'
 import Exchange from './pages/Exchange'
+import QR from './pages/QR'
 import Auth from './pages/Auth'
 import { LanguageProvider } from './contexts/LanguageContext'
-
-const AUTH_ROUTES = ['/auth']
 
 const AppInner: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true)
   const location = useLocation()
 
-  const isAuthRoute = AUTH_ROUTES.includes(location.pathname)
+  const isAuthRoute = false
 
   useEffect(() => {
     window.Telegram?.WebApp?.ready()
@@ -43,7 +42,7 @@ const AppInner: React.FC = () => {
       }}
     >
       <Routes>
-        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Home />} />
         <Route path="/send" element={<Send />} />
         <Route path="/receive" element={<Receive />} />
@@ -52,6 +51,7 @@ const AppInner: React.FC = () => {
         <Route path="/kyc" element={<KYC />} />
         <Route path="/card" element={<Card />} />
         <Route path="/exchange" element={<Exchange />} />
+        <Route path="/qr" element={<QR />} />
       </Routes>
 
       {!isAuthRoute && <BottomNav />}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAccounts } from '../hooks/useBalance'
 import { useAllAssets } from '../hooks/useTokens'
@@ -15,6 +15,23 @@ import {
 } from '../hooks/useCard'
 import { useLang } from '../contexts/LanguageContext'
 import type { CPTransactionType } from '../types/cardplus'
+import { isDemoMode } from '../demo'
+
+const DEMO_CARD = {
+  cardId:     'demo-card-1',
+  cardNo:     '5365 **** **** 4729',
+  cardStatus: 'NORMAL' as const,
+  cardType:   'VIRTUAL',
+  holderName: 'ARTEM REGIS',
+  expiryDate: '09/27',
+  currency:   'USD',
+}
+const DEMO_BALANCE = { cardId: 'demo-card-1', balance: 124.50, availableBalance: 124.50, currency: 'USD' }
+const DEMO_TRANSACTIONS = [
+  { transId: 'd1', cardId: 'demo-card-1', amount: 124.50, currency: 'USD', merchantName: 'Пополнение', transType: 'TOPUP' as CPTransactionType, status: 'COMPLETED' as const, transTime: '2026-07-08T12:00:00Z', description: '' },
+  { transId: 'd2', cardId: 'demo-card-1', amount: 45.99, currency: 'USD', merchantName: 'Apple Store', transType: 'PURCHASE' as CPTransactionType, status: 'COMPLETED' as const, transTime: '2026-07-07T18:30:00Z', description: '' },
+  { transId: 'd3', cardId: 'demo-card-1', amount: 12.50, currency: 'USD', merchantName: 'Spotify', transType: 'PURCHASE' as CPTransactionType, status: 'COMPLETED' as const, transTime: '2026-07-06T09:15:00Z', description: '' },
+]
 
 const transLabel = (type: CPTransactionType, lang: string): string => {
   const map: Record<CPTransactionType, [string, string]> = {
@@ -49,7 +66,9 @@ const Card: React.FC = () => {
   const lockMutation  = useLockCard(cardId)
   const topUpMutation = useTopUpCard()
 
-  const [showCVV, setShowCVV] = useState(false)
+  const [showBack, setShowBack] = useState(false)
+  const [flipPhase, setFlipPhase] = useState<'idle'|'out'|'in'>('idle')
+  const flipTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showTopUp, setShowTopUp] = useState(false)
   const [topUpAmount, setTopUpAmount] = useState('')
   const [topUpSuccess, setTopUpSuccess] = useState(false)
@@ -115,8 +134,22 @@ const Card: React.FC = () => {
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light')
   }
 
-  const isLocked = card?.cardStatus === 'LOCKED'
-  const hasCard  = !!cardId && !!card
+  const handleFlip = () => {
+    if (flipPhase !== 'idle') return
+    if (flipTimer.current) clearTimeout(flipTimer.current)
+    setFlipPhase('out')
+    flipTimer.current = setTimeout(() => {
+      setShowBack(b => !b)
+      setFlipPhase('idle')
+    }, 180)
+  }
+
+  const demo = isDemoMode()
+  const displayCard = demo ? DEMO_CARD : card
+  const displayBalance = demo ? DEMO_BALANCE : balance
+  const displayTransactions = demo ? DEMO_TRANSACTIONS : transactions
+  const isLocked = !demo && card?.cardStatus === 'LOCKED'
+  const hasCard  = demo || (!!cardId && !!card)
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#F0F4FA' }}>
@@ -150,7 +183,7 @@ const Card: React.FC = () => {
         )}
 
         {/* ── NO CARD ── */}
-        {!cardId && !cardLoading && (
+        {!cardId && !cardLoading && !demo && (
           <>
             {/* Card placeholder */}
             <div
@@ -236,77 +269,130 @@ const Card: React.FC = () => {
         {/* ── CARD ISSUED ── */}
         {hasCard && !cardLoading && (
           <>
-            {/* Card visual */}
+            {/* Card flip container */}
             <div
-              className="relative overflow-hidden mb-4 flex flex-col justify-between"
-              style={{
-                background: isLocked
-                  ? 'linear-gradient(135deg,#6B7280,#374151)'
-                  : 'linear-gradient(135deg,#1D4ED8,#2563EB)',
-                borderRadius: 20, padding: '24px 24px 20px', height: 190,
-                boxShadow: isLocked ? '0 8px 32px rgba(0,0,0,0.2)' : '0 8px 32px rgba(37,99,235,0.35)',
-              }}
+              style={{ height: 190, marginBottom: 8, cursor: 'pointer' }}
+              onClick={handleFlip}
             >
-              <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-              <div style={{ position: 'absolute', bottom: -40, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '100%',
+                  transition: 'transform 0.18s ease-in-out',
+                  transform: flipPhase === 'out' ? 'scaleX(0)' : 'scaleX(1)',
+                }}
+              >
+                {!showBack ? (
+                <div
+                  className="relative overflow-hidden flex flex-col justify-between"
+                  style={{
+                    width: '100%', height: '100%',
+                    background: isLocked
+                      ? 'linear-gradient(135deg,#3A3A3A,#1A1A1A)'
+                      : 'linear-gradient(135deg,#2C2C2C,#000000)',
+                    borderRadius: 20, padding: '24px 24px 20px',
+                    boxShadow: isLocked ? '0 8px 32px rgba(0,0,0,0.35)' : '0 8px 32px rgba(0,0,0,0.45)',
+                  }}
+                >
+                  <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+                  <div style={{ position: 'absolute', bottom: -40, left: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
 
-              <div className="flex items-center justify-between relative z-10">
-                <div style={{ width: 40, height: 28, background: 'rgba(255,255,255,0.25)', borderRadius: 4 }} />
-                {isLocked && (
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                    </svg>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'white' }}>{t('cardFrozen')}</span>
+                  <div className="flex items-center justify-between relative z-10">
+                    <div style={{ width: 40, height: 28, background: 'rgba(255,255,255,0.25)', borderRadius: 4 }} />
+                    {isLocked ? (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'white' }}>{t('cardFrozen')}</span>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                        {lang === 'ru' ? 'нажмите, чтобы перевернуть' : 'tap to flip'}
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="relative z-10">
-                <div style={{ fontSize: 18, fontWeight: 600, color: 'white', letterSpacing: '0.12em', marginBottom: 8, fontVariantNumeric: 'tabular-nums' }}>
-                  {card.cardNo}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>{t('cardHolder').toUpperCase()}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{card.holderName}</div>
-                  </div>
-                  <div className="text-right">
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>{t('cardExpiry').toUpperCase()}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{card.expiryDate}</div>
-                  </div>
-                  <div className="text-right">
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', marginBottom: 2 }}>CVV</div>
-                    <div
-                      style={{ fontSize: 13, fontWeight: 600, color: 'white', cursor: 'pointer' }}
-                      onClick={() => setShowCVV(!showCVV)}
-                    >
-                      {showCVV ? '···' : '•••'}
+                  <div className="relative z-10">
+                    <div style={{ fontSize: 18, fontWeight: 600, color: 'white', letterSpacing: '0.14em', marginBottom: 10, fontVariantNumeric: 'tabular-nums' }}>
+                      {displayCard?.cardNo}
+                    </div>
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', marginBottom: 2, letterSpacing: '0.08em' }}>{t('cardHolder').toUpperCase()}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'white', textTransform: 'uppercase' }}>{displayCard?.holderName}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.55)', marginBottom: 2, letterSpacing: '0.08em' }}>{t('cardExpiry').toUpperCase()}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{displayCard?.expiryDate}</div>
+                      </div>
+                      <svg width="48" height="30" viewBox="0 0 50 32" fill="none">
+                        <circle cx="18" cy="16" r="16" fill="rgba(255,255,255,0.28)"/>
+                        <circle cx="32" cy="16" r="16" fill="rgba(255,255,255,0.16)"/>
+                      </svg>
                     </div>
                   </div>
                 </div>
-              </div>
+                ) : (
+                <div
+                  className="flex flex-col justify-between overflow-hidden"
+                  style={{
+                    width: '100%', height: '100%',
+                    background: isLocked
+                      ? 'linear-gradient(135deg,#2A2A2A,#111111)'
+                      : 'linear-gradient(135deg,#1A1A1A,#000000)',
+                    borderRadius: 20,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
+                  }}
+                >
+                  {/* Magnetic stripe */}
+                  <div style={{ background: '#0F172A', height: 44, width: '100%', marginTop: 24 }} />
 
-              <div className="absolute right-5 bottom-5 z-10">
-                <svg width="48" height="30" viewBox="0 0 50 32" fill="none">
-                  <circle cx="18" cy="16" r="16" fill="rgba(255,255,255,0.25)"/>
-                  <circle cx="32" cy="16" r="16" fill="rgba(255,255,255,0.15)"/>
-                </svg>
+                  {/* Signature + CVV strip */}
+                  <div className="flex items-center gap-3 px-5">
+                    <div style={{ flex: 1, height: 36, borderRadius: 4, background: 'repeating-linear-gradient(90deg,#fff 0,#fff 3px,#f1f5f9 3px,#f1f5f9 6px)', display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
+                      <span style={{ fontSize: 10, color: '#94A3B8', fontStyle: 'italic', letterSpacing: '0.05em' }}>AUTHORIZED SIGNATURE</span>
+                    </div>
+                    <div style={{ minWidth: 52, height: 36, borderRadius: 6, background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 9, color: '#94A3B8', fontWeight: 500 }}>CVV</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#1E293B', letterSpacing: '0.1em' }}>•••</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom row */}
+                  <div className="flex items-end justify-between px-5 pb-5">
+                    <div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', marginBottom: 3, letterSpacing: '0.08em' }}>CARD NUMBER</div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.1em' }}>{displayCard?.cardNo}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', marginBottom: 2 }}>VIRTUAL CARD</div>
+                      <svg width="42" height="26" viewBox="0 0 50 32" fill="none">
+                        <circle cx="18" cy="16" r="16" fill="rgba(255,255,255,0.22)"/>
+                        <circle cx="32" cy="16" r="16" fill="rgba(255,255,255,0.13)"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                )}
               </div>
             </div>
 
-            {/* CVV note */}
-            {showCVV && (
-              <div className="flex items-center gap-2 p-3 rounded-xl mb-3" style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            {/* Flip hint */}
+            <div className="flex justify-center mb-4">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.75" strokeLinecap="round">
+                  <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
+                  <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
                 </svg>
-                <span style={{ fontSize: 12, color: '#D97706' }}>
-                  {lang === 'ru' ? 'CVV недоступен через API — уточняем у CardPlus' : 'CVV not available via API — clarifying with CardPlus'}
+                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 500 }}>
+                  {showBack
+                    ? (lang === 'ru' ? 'нажмите, чтобы вернуть' : 'tap to flip back')
+                    : (lang === 'ru' ? 'нажмите на карту, чтобы увидеть CVV' : 'tap card to see CVV')}
                 </span>
               </div>
-            )}
+            </div>
 
             {/* Balance */}
             <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 12 }}>
@@ -320,8 +406,8 @@ const Card: React.FC = () => {
                 </div>
               </div>
               <div style={{ fontSize: 36, fontWeight: 700, color: '#111827', letterSpacing: '-0.03em', fontVariantNumeric: 'tabular-nums' }}>
-                {(balance?.balance ?? 0).toFixed(2)}{' '}
-                <span style={{ fontSize: 18, color: '#9CA3AF', fontWeight: 400 }}>{balance?.currency || 'USD'}</span>
+                {(displayBalance?.balance ?? 0).toFixed(2)}{' '}
+                <span style={{ fontSize: 18, color: '#9CA3AF', fontWeight: 400 }}>{displayBalance?.currency || 'USD'}</span>
               </div>
             </div>
 
@@ -417,10 +503,38 @@ const Card: React.FC = () => {
               </div>
             )}
 
+            {/* KYC upgrade banner */}
+            <div
+              className="flex items-center justify-between gap-3 mb-4"
+              style={{ background: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)', borderRadius: 16, padding: '14px 16px', border: '1px solid #BFDBFE' }}
+            >
+              <div className="flex items-center gap-3">
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1E40AF' }}>
+                    {lang === 'ru' ? 'Увеличьте лимит карты' : 'Increase card limit'}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#3B82F6' }}>
+                    {lang === 'ru' ? 'Для увеличения лимита пройдите KYC' : 'Complete KYC to increase limit'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/kyc')}
+                style={{ background: '#2563EB', color: 'white', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                {lang === 'ru' ? 'Пройти' : 'Start'}
+              </button>
+            </div>
+
             {/* Transactions */}
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 12 }}>{t('cardTransactions')}</div>
-              {transactions.length === 0 ? (
+              {displayTransactions.length === 0 ? (
                 <div className="flex flex-col items-center py-10" style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
                   <div className="flex items-center justify-center w-14 h-14 rounded-2xl mb-3" style={{ background: '#F3F4F6' }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="1.75">
@@ -431,7 +545,7 @@ const Card: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  {transactions.map(tx => {
+                  {displayTransactions.map(tx => {
                     const isIn  = tx.transType === 'TOPUP' || tx.transType === 'REFUND'
                     const color = tx.status === 'FAILED' ? '#DC2626' : isIn ? '#059669' : '#DC2626'
                     const bg    = tx.status === 'FAILED' ? '#FEF2F2' : isIn ? '#ECFDF5' : '#FEF2F2'
@@ -470,6 +584,7 @@ const Card: React.FC = () => {
           0% { background-position: -200% 0; }
           100% { background-position: 200% 0; }
         }
+        .card-face { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
       `}</style>
     </div>
   )

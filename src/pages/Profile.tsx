@@ -5,6 +5,7 @@ import { useProfile } from '../hooks/useProfile'
 import { useLang } from '../contexts/LanguageContext'
 import { updateProfile, logoutApi } from '../api/endpoints'
 import { tokenStorage } from '../api/client'
+import { isDemoMode } from '../demo'
 
 const KYC_STATUS_KEY = 'cryptomir_kyc_status'
 
@@ -13,10 +14,11 @@ const Profile: React.FC = () => {
   const queryClient = useQueryClient()
   const { data: profile, isLoading: profileLoading } = useProfile()
   const { lang, toggle, t } = useLang()
+  const demo = isDemoMode()
 
   const kycStatus = localStorage.getItem(KYC_STATUS_KEY) || 'none'
 
-  const [form, setForm] = useState({ full_name: '', username: '' })
+  const [form, setForm] = useState({ full_name: '', username: '', phone: '', email: '' })
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -24,12 +26,20 @@ const Profile: React.FC = () => {
       setForm({
         full_name: profile.full_name || '',
         username: profile.username || '',
+        phone: profile.phone || '',
+        email: profile.email || '',
       })
     }
   }, [profile])
 
   const saveMutation = useMutation({
-    mutationFn: () => updateProfile({ username: form.username, full_name: form.full_name }),
+    mutationFn: async () => {
+      if (demo) {
+        await new Promise(resolve => setTimeout(resolve, 500))
+        return
+      }
+      await updateProfile({ username: form.username, full_name: form.full_name, phone: form.phone, email: form.email })
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       setSaved(true)
@@ -48,7 +58,7 @@ const Profile: React.FC = () => {
         try { await logoutApi() } catch { /* ignore */ }
         tokenStorage.clear()
         queryClient.clear()
-        navigate('/auth', { replace: true })
+        navigate('/', { replace: true })
       }
     })
   }
@@ -171,16 +181,27 @@ const Profile: React.FC = () => {
                 placeholder="username"
               />
             </div>
-            {profile?.email && (
-              <div>
-                <label style={labelStyle}>{t('email')}</label>
-                <input
-                  style={{ ...inputStyle, color: '#9CA3AF' }}
-                  value={profile.email}
-                  readOnly
-                />
-              </div>
-            )}
+            <div>
+              <label style={labelStyle}>{lang === 'ru' ? 'Номер телефона' : 'Phone number'}</label>
+              <input
+                style={inputStyle}
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="+7 999 000-00-00"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>{t('email')}</label>
+              <input
+                style={inputStyle}
+                type="email"
+                inputMode="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="email@example.com"
+              />
+            </div>
           </div>
           {saveMutation.isError && (
             <div style={{ marginTop: 12, fontSize: 13, color: '#DC2626' }}>

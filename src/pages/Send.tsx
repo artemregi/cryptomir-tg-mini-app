@@ -5,6 +5,11 @@ import { createWithdrawal } from '../api/endpoints'
 import { useAccounts } from '../hooks/useBalance'
 import { useNetworks, useAllAssets } from '../hooks/useTokens'
 import { isValidTronAddress, formatNumber } from '../utils/format'
+import { isDemoMode } from '../demo'
+import { kytService, type KYTResult } from '../services/kyt'
+
+const DEMO_ADDRESS = 'TYn3P8vQqCqLLRJkXdmPNhRkYJkZtXab12'
+const DEMO_AMOUNT = '200'
 
 type SendStep = 'form' | 'confirm' | 'success' | 'error'
 
@@ -22,12 +27,15 @@ const BackButton = ({ onBack }: { onBack: () => void }) => (
 
 const Send: React.FC = () => {
   const navigate = useNavigate()
+  const demo = isDemoMode()
   const { data: accounts = [] } = useAccounts()
   const { data: assets = [] } = useAllAssets()
   const [step, setStep] = useState<SendStep>('form')
-  const [address, setAddress] = useState('')
-  const [amount, setAmount] = useState('')
+  const [address, setAddress] = useState(demo ? DEMO_ADDRESS : '')
+  const [amount, setAmount] = useState(demo ? DEMO_AMOUNT : '')
   const [errorMsg, setErrorMsg] = useState('')
+  const [kytResult, setKytResult] = useState<KYTResult | null>(null)
+  const [kytChecking, setKytChecking] = useState(false)
 
   // Find USDT asset
   const usdtAsset = assets.find(a => a.symbol === 'USDT' && a.enabled)
@@ -59,7 +67,10 @@ const Send: React.FC = () => {
   }, [handleBack])
 
   const withdrawMutation = useMutation({
-    mutationFn: () => createWithdrawal(usdtAsset!.id, amountNum.toString(), address),
+    mutationFn: async () => {
+      if (demo) { await new Promise(resolve => setTimeout(resolve, 800)); return }
+      await createWithdrawal(usdtAsset!.id, amountNum.toString(), address)
+    },
     onSuccess: () => {
       setStep('success')
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success')
@@ -80,8 +91,22 @@ const Send: React.FC = () => {
   const isFormValid = isValidTronAddress(address) && amountNum >= minAmount && amountNum + fee <= availableBalance && !amountError && !!usdtAsset
   const totalDeducted = amountNum + fee
 
-  const handleSubmitForm = () => {
+  const handleSubmitForm = async () => {
     if (!isFormValid) return
+    setKytChecking(true)
+    setKytResult(null)
+    try {
+      const result = await kytService.checkTransaction({ address, amount: amountNum, asset: 'USDT' })
+      setKytResult(result)
+      if (result.blocked) {
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error')
+        return // stay on form, show error banner
+      }
+    } catch {
+      // KYT unavailable — allow the operation to proceed
+    } finally {
+      setKytChecking(false)
+    }
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium')
     setStep('confirm')
   }
@@ -186,7 +211,7 @@ const Send: React.FC = () => {
         <div className="relative">
           <textarea
             value={address}
-            onChange={(e) => setAddress(e.target.value.trim())}
+            onChange={(e) => { setAddress(e.target.value.trim()); setKytResult(null) }}
             placeholder="T..."
             rows={2}
             className="w-full font-mono text-sm resize-none outline-none transition-all"
@@ -221,7 +246,7 @@ const Send: React.FC = () => {
             type="number"
             inputMode="decimal"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
+            onChange={(e) => { setAmount(e.target.value); setKytResult(null) }}
             placeholder="0.00"
             className="outline-none bg-transparent"
             style={{ fontSize: 15, color: amount ? '#111827' : '#9CA3AF', fontWeight: 400, width: '100%', caretColor: '#2563EB', border: 'none' }}
@@ -247,14 +272,52 @@ const Send: React.FC = () => {
         <span style={{ color: '#111827', fontSize: 14, fontWeight: 600 }}>~{formatNumber(fee, 4)} USDT</span>
       </div>
 
+      {/* KYT blocked banner */}
+      {kytResult?.blocked && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl mb-4" style={{ background: '#FEF2F2', border: '1.5px solid #FECACA' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="1.75" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+          </svg>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: '#DC2626', marginBottom: 4 }}>
+              Операция заблокирована
+            </p>
+            <p style={{ fontSize: 13, color: '#DC2626', lineHeight: 1.5 }}>
+              {kytResult.reason || 'Адрес получателя не прошёл проверку безопасности транзакций (KYT). Операция невозможна.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* KYT medium/high risk warning */}
+      {kytResult && !kytResult.blocked && kytResult.riskLevel !== 'low' && (
+        <div className="flex items-start gap-3 p-4 rounded-2xl mb-4" style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="1.75" strokeLinecap="round" className="flex-shrink-0 mt-0.5">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <p style={{ fontSize: 13, color: '#92400E', lineHeight: 1.5 }}>
+            {kytResult.reason || 'Транзакция имеет повышенный уровень риска. Проверьте адрес получателя.'}
+          </p>
+        </div>
+      )}
+
       {/* Submit */}
       <button
         onClick={handleSubmitForm}
-        disabled={!isFormValid}
+        disabled={!isFormValid || kytChecking || kytResult?.blocked}
         className="w-full py-4 rounded-2xl font-semibold text-white active:scale-95 transition-transform disabled:opacity-40"
-        style={{ background: '#2563EB', border: 'none', borderRadius: 16, fontSize: 16, boxShadow: isFormValid ? '0 6px 20px rgba(37,99,235,0.35)' : 'none' }}
+        style={{ background: '#2563EB', border: 'none', borderRadius: 16, fontSize: 16, boxShadow: (isFormValid && !kytResult?.blocked) ? '0 6px 20px rgba(37,99,235,0.35)' : 'none' }}
       >
-        Отправить
+        {kytChecking ? (
+          <span className="flex items-center justify-center gap-2">
+            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3"/>
+              <path d="M12 2a10 10 0 0110 10" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+            </svg>
+            Проверка безопасности...
+          </span>
+        ) : 'Отправить'}
       </button>
     </div>
   )

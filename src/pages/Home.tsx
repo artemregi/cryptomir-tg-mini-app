@@ -34,7 +34,7 @@ const Home: React.FC = () => {
 
   const bannerCards = [
     { label: 'Как пополнить?', gradient: 'linear-gradient(135deg,#1D4ED8,#2563EB)', shadow: 'rgba(37,99,235,0.32)' },
-    { label: 'QR‑платёж', gradient: 'linear-gradient(135deg,#0E7490,#0891B2)', shadow: 'rgba(8,145,178,0.32)', path: '/receive' },
+    { label: 'QR‑платёж', gradient: 'linear-gradient(135deg,#0E7490,#0891B2)', shadow: 'rgba(8,145,178,0.32)', path: '/qr' },
     { label: 'Реферальная', gradient: 'linear-gradient(135deg,#6D28D9,#7C3AED)', shadow: 'rgba(109,40,217,0.32)' },
   ]
 
@@ -60,19 +60,18 @@ const Home: React.FC = () => {
       ),
     },
     {
-      label: 'Получить',
-      path: '/receive',
+      label: 'История',
+      path: '/history',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round">
-          <line x1="12" y1="19" x2="12" y2="5"/>
-          <polyline points="17 12 12 7 7 12"/>
-          <path d="M2 20h20"/>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
         </svg>
       ),
     },
     {
       label: 'Сканировать',
-      path: '/receive',
+      path: '/qr',
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2">
           <rect x="3" y="3" width="7" height="7"/>
@@ -229,7 +228,6 @@ const Home: React.FC = () => {
                   <div style={{ fontSize: 15, fontWeight: 700, color: '#111827', fontVariantNumeric: 'tabular-nums' }}>
                     {asset.balance.toFixed(2)}
                   </div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>$0.00</div>
                 </div>
               </div>
             ))

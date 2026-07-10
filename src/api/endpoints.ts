@@ -73,7 +73,7 @@ export const getProfile = async (): Promise<GWProfile> => {
   return data
 }
 
-export const updateProfile = async (params: { username?: string; full_name?: string }): Promise<void> => {
+export const updateProfile = async (params: { username?: string; full_name?: string; phone?: string; email?: string }): Promise<void> => {
   await client.post('/api/v1/user/v1/profile/update', params)
 }
 

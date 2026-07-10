@@ -124,9 +124,9 @@ const Exchange: React.FC = () => {
         {/* From */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 4 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>{t('from')}</div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-3">
             <div
-              className="flex items-center gap-2 cursor-pointer active:opacity-70 px-3 py-2.5 rounded-2xl flex-shrink-0"
+              className="flex items-center gap-2 cursor-pointer active:opacity-70 px-3 py-2.5 rounded-2xl"
               style={{ background: '#F3F4F6' }}
               onClick={() => setShowFromPicker(true)}
             >
@@ -136,25 +136,27 @@ const Exchange: React.FC = () => {
               <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>{fromSymbol}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={fromAmount}
-              onChange={e => setFromAmount(e.target.value)}
-              placeholder="0.00"
-              className="flex-1 outline-none text-right"
-              style={{ fontSize: 24, fontWeight: 700, color: '#111827', background: 'transparent', border: 'none', caretColor: '#2563EB' }}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-3" style={{ borderTop: '1px solid #F3F4F6', paddingTop: 10 }}>
-            <span style={{ fontSize: 12, color: '#9CA3AF' }}>{t('available')}: {available.toFixed(2)} {fromSymbol}</span>
             <button
               onClick={() => setFromAmount(available.toFixed(2))}
-              style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '3px 10px', borderRadius: 8, border: 'none' }}
+              style={{ fontSize: 12, fontWeight: 700, color: '#2563EB', background: '#EFF6FF', padding: '5px 12px', borderRadius: 8, border: 'none' }}
             >
               {t('max')}
             </button>
           </div>
+          <input
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9.]*"
+            value={fromAmount}
+            onChange={e => {
+              const v = e.target.value.replace(/[^0-9.]/g, '')
+              setFromAmount(v)
+            }}
+            placeholder="0.00"
+            className="w-full outline-none text-right"
+            style={{ fontSize: 28, fontWeight: 700, color: '#111827', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '12px 16px', caretColor: '#2563EB', display: 'block' }}
+          />
+          <div style={{ marginTop: 8, fontSize: 12, color: '#9CA3AF' }}>{t('available')}: {available.toFixed(2)} {fromSymbol}</div>
         </div>
 
         {/* Swap button */}

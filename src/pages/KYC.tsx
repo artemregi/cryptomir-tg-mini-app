@@ -6,31 +6,56 @@ import { useKycStatus, useSubmitKyc, useResubmitKyc } from '../hooks/useKyc'
 import { uploadKycPhoto } from '../api/endpoints'
 import type { CPDocType } from '../types/cardplus'
 
-const COUNTRIES_RU = [
-  'Россия', 'Беларусь', 'Казахстан', 'Украина', 'Узбекистан', 'Азербайджан',
-  'Армения', 'Грузия', 'Кыргызстан', 'Молдова', 'Таджикистан', 'Туркменистан',
-  'Германия', 'Франция', 'Италия', 'Испания', 'Великобритания', 'Нидерланды',
-  'Польша', 'Чехия', 'Австрия', 'Швейцария', 'Португалия', 'Бельгия',
-  'США', 'Канада', 'Австралия', 'Япония', 'Китай', 'Индия',
-  'ОАЭ', 'Турция', 'Израиль', 'Бразилия', 'Аргентина', 'Мексика',
-  'Другая страна',
-]
-
-const COUNTRIES_EN = [
-  'Russia', 'Belarus', 'Kazakhstan', 'Ukraine', 'Uzbekistan', 'Azerbaijan',
-  'Armenia', 'Georgia', 'Kyrgyzstan', 'Moldova', 'Tajikistan', 'Turkmenistan',
-  'Germany', 'France', 'Italy', 'Spain', 'United Kingdom', 'Netherlands',
-  'Poland', 'Czech Republic', 'Austria', 'Switzerland', 'Portugal', 'Belgium',
-  'USA', 'Canada', 'Australia', 'Japan', 'China', 'India',
-  'UAE', 'Turkey', 'Israel', 'Brazil', 'Argentina', 'Mexico',
-  'Other country',
+const COUNTRIES = [
+  'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda',
+  'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+  'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium',
+  'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana',
+  'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi',
+  'Cabo Verde', 'Cambodia', 'Cameroon', 'Canada', 'Central African Republic',
+  'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica',
+  'Croatia', 'Cuba', 'Cyprus', 'Czech Republic',
+  'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic',
+  'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia',
+  'Eswatini', 'Ethiopia',
+  'Fiji', 'Finland', 'France',
+  'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada',
+  'Guatemala', 'Guinea', 'Guinea-Bissau', 'Guyana',
+  'Haiti', 'Honduras', 'Hungary',
+  'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy',
+  'Jamaica', 'Japan', 'Jordan',
+  'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait', 'Kyrgyzstan',
+  'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein',
+  'Lithuania', 'Luxembourg',
+  'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands',
+  'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco',
+  'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar',
+  'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua',
+  'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway',
+  'Oman',
+  'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay',
+  'Peru', 'Philippines', 'Poland', 'Portugal',
+  'Qatar',
+  'Romania', 'Russia', 'Rwanda',
+  'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines',
+  'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal',
+  'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia',
+  'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan',
+  'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria',
+  'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Timor-Leste', 'Togo',
+  'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
+  'UAE', 'Uganda', 'Ukraine', 'United Kingdom', 'United States', 'Uruguay',
+  'Uzbekistan',
+  'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+  'Yemen',
+  'Zambia', 'Zimbabwe',
 ]
 
 const DOC_TYPES: { value: CPDocType; labelRu: string; labelEn: string }[] = [
-  { value: 'PASSPORT',         labelRu: 'Паспорт',              labelEn: 'Passport' },
-  { value: 'ID_CARD',          labelRu: 'Удостоверение личности', labelEn: 'ID Card' },
-  { value: 'DRIVING_LICENSE',  labelRu: 'Водительское удостоверение', labelEn: 'Driver\'s License' },
+  { value: 'PASSPORT', labelRu: 'Паспорт', labelEn: 'Passport' },
 ]
+
+const isLatinOnly = (str: string) => /^[a-zA-Z\s\-'.]*$/.test(str)
 
 const KYC: React.FC = () => {
   const navigate   = useNavigate()
@@ -46,7 +71,6 @@ const KYC: React.FC = () => {
 
   const [step, setStep] = useState<'form' | 'sent'>('form')
   const [country, setCountry] = useState('')
-  const [customCountry, setCustomCountry] = useState('')
   const [showCountryList, setShowCountryList] = useState(false)
   const [docType, setDocType] = useState<CPDocType>('PASSPORT')
   const [docNumber, setDocNumber] = useState('')
@@ -58,9 +82,11 @@ const KYC: React.FC = () => {
   const [uploading, setUploading] = useState(false)
   const [validationError, setValidationError] = useState('')
 
-  const countries = lang === 'ru' ? COUNTRIES_RU : COUNTRIES_EN
-  const isOther = country === countries[countries.length - 1]
-  const finalCountry = isOther ? customCountry : country
+  const [countrySearch, setCountrySearch] = useState('')
+  const filteredCountries = COUNTRIES.filter(c =>
+    c.toLowerCase().includes(countrySearch.toLowerCase())
+  )
+  const finalCountry = country
 
   // Prefill name from profile
   useEffect(() => {
@@ -103,6 +129,12 @@ const KYC: React.FC = () => {
 
     if (!firstName.trim() || !lastName.trim()) {
       setValidationError(lang === 'ru' ? 'Введите имя и фамилию' : 'Enter first and last name')
+      return
+    }
+    if (!isLatinOnly(firstName) || !isLatinOnly(lastName)) {
+      setValidationError(lang === 'ru'
+        ? 'Имя и фамилия должны быть написаны латинскими буквами (как в паспорте)'
+        : 'First and last name must be in Latin letters (as in your passport)')
       return
     }
     if (!birthDate) {
@@ -261,22 +293,32 @@ const KYC: React.FC = () => {
           </div>
           <div className="space-y-4">
             <div>
-              <label style={labelStyle}>{lang === 'ru' ? 'Имя' : 'First name'} *</label>
+              <label style={labelStyle}>{lang === 'ru' ? 'Имя (латиницей)' : 'First name (Latin)'} *</label>
               <input
-                style={inputStyle}
+                style={{ ...inputStyle, border: `1.5px solid ${firstName && !isLatinOnly(firstName) ? '#DC2626' : '#E5E7EB'}` }}
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
-                placeholder={lang === 'ru' ? 'Иван' : 'John'}
+                placeholder="John"
               />
+              {firstName && !isLatinOnly(firstName) && (
+                <p style={{ fontSize: 12, color: '#DC2626', marginTop: 4, fontWeight: 500 }}>
+                  {lang === 'ru' ? '⚠️ Только латинские буквы, как в паспорте' : '⚠️ Latin letters only, as in your passport'}
+                </p>
+              )}
             </div>
             <div>
-              <label style={labelStyle}>{lang === 'ru' ? 'Фамилия' : 'Last name'} *</label>
+              <label style={labelStyle}>{lang === 'ru' ? 'Фамилия (латиницей)' : 'Last name (Latin)'} *</label>
               <input
-                style={inputStyle}
+                style={{ ...inputStyle, border: `1.5px solid ${lastName && !isLatinOnly(lastName) ? '#DC2626' : '#E5E7EB'}` }}
                 value={lastName}
                 onChange={e => setLastName(e.target.value)}
-                placeholder={lang === 'ru' ? 'Иванов' : 'Smith'}
+                placeholder="Smith"
               />
+              {lastName && !isLatinOnly(lastName) && (
+                <p style={{ fontSize: 12, color: '#DC2626', marginTop: 4, fontWeight: 500 }}>
+                  {lang === 'ru' ? '⚠️ Только латинские буквы, как в паспорте' : '⚠️ Latin letters only, as in your passport'}
+                </p>
+              )}
             </div>
             <div>
               <label style={labelStyle}>{lang === 'ru' ? 'Дата рождения' : 'Date of birth'} *</label>
@@ -309,32 +351,50 @@ const KYC: React.FC = () => {
             </svg>
           </div>
           {showCountryList && (
-            <div className="overflow-y-auto mb-3" style={{ maxHeight: 220, borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#FFFFFF' }}>
-              {countries.map((c) => (
-                <div
-                  key={c}
-                  className="px-4 py-3 cursor-pointer"
-                  style={{
-                    fontSize: 14,
-                    color: c === country ? '#2563EB' : '#111827',
-                    fontWeight: c === country ? 600 : 400,
-                    borderBottom: '1px solid #F3F4F6',
-                    background: c === country ? '#EFF6FF' : 'transparent',
-                  }}
-                  onClick={() => { setCountry(c); setShowCountryList(false) }}
-                >
-                  {c}
-                </div>
-              ))}
+            <div className="mb-3" style={{ borderRadius: 12, border: '1.5px solid #E5E7EB', background: '#FFFFFF', overflow: 'hidden' }}>
+              <div style={{ padding: '10px 12px', borderBottom: '1px solid #F3F4F6' }}>
+                <input
+                  style={{ width: '100%', fontSize: 14, border: '1.5px solid #E5E7EB', borderRadius: 10, padding: '8px 12px', outline: 'none', background: '#F9FAFB', color: '#111827' }}
+                  placeholder={lang === 'ru' ? 'Поиск страны...' : 'Search country...'}
+                  value={countrySearch}
+                  onChange={e => setCountrySearch(e.target.value)}
+                  onClick={e => e.stopPropagation()}
+                  autoFocus
+                />
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 200 }}>
+                {filteredCountries.length > 0 ? filteredCountries.map((c) => (
+                  <div
+                    key={c}
+                    className="px-4 py-3 cursor-pointer"
+                    style={{
+                      fontSize: 14,
+                      color: c === country ? '#2563EB' : '#111827',
+                      fontWeight: c === country ? 600 : 400,
+                      borderBottom: '1px solid #F3F4F6',
+                      background: c === country ? '#EFF6FF' : 'transparent',
+                    }}
+                    onClick={() => { setCountry(c); setShowCountryList(false); setCountrySearch('') }}
+                  >
+                    {c}
+                  </div>
+                )) : (
+                  <div style={{ padding: '20px 16px', textAlign: 'center' }}>
+                    <p style={{ fontSize: 13, color: '#DC2626', fontWeight: 500, lineHeight: 1.6 }}>
+                      {lang === 'ru'
+                        ? 'Если вашей страны нет в списке для прохождения KYC, пожалуйста, свяжитесь с поддержкой.'
+                        : 'If your country is not in the KYC list, please contact support.'}
+                    </p>
+                    <button
+                      onClick={() => window.Telegram?.WebApp?.openTelegramLink('https://t.me/angelinaadminka')}
+                      style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: '#2563EB', background: '#EFF6FF', padding: '8px 16px', borderRadius: 10, border: 'none' }}
+                    >
+                      {lang === 'ru' ? 'Написать в поддержку' : 'Contact support'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-          {isOther && (
-            <input
-              style={inputStyle}
-              value={customCountry}
-              onChange={e => setCustomCountry(e.target.value)}
-              placeholder={t('enterCountry')}
-            />
           )}
         </div>
 
@@ -344,27 +404,13 @@ const KYC: React.FC = () => {
             {lang === 'ru' ? 'Документ' : 'Document'}
           </div>
           <div className="space-y-4">
-            {/* Doc type */}
+            {/* Doc type — Passport only */}
             <div>
-              <label style={labelStyle}>{lang === 'ru' ? 'Тип документа' : 'Document type'} *</label>
-              <div className="flex gap-2">
-                {DOC_TYPES.map(dt => (
-                  <button
-                    key={dt.value}
-                    onClick={() => setDocType(dt.value)}
-                    className="flex-1 py-2.5 rounded-xl text-center transition-all"
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      border: 'none',
-                      background: docType === dt.value ? '#EFF6FF' : '#F9FAFB',
-                      color: docType === dt.value ? '#2563EB' : '#6B7280',
-                      boxShadow: docType === dt.value ? '0 0 0 1.5px #2563EB' : '0 0 0 1.5px #E5E7EB',
-                    }}
-                  >
-                    {lang === 'ru' ? dt.labelRu.split(' ')[0] : dt.labelEn.split(' ')[0]}
-                  </button>
-                ))}
+              <label style={labelStyle}>{lang === 'ru' ? 'Тип документа' : 'Document type'}</label>
+              <div
+                style={{ background: '#F9FAFB', border: '1.5px solid #2563EB', borderRadius: 14, padding: '14px 16px', fontSize: 15, fontWeight: 600, color: '#2563EB' }}
+              >
+                {lang === 'ru' ? 'Паспорт' : 'Passport'}
               </div>
             </div>
             <div>

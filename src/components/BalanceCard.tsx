@@ -74,9 +74,6 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ onRefresh }) => {
               {isBalanceHidden ? '••••••' : formatNumber(usdtAmount, 2)}{' '}
               <span style={{ fontSize: 22, color: '#9CA3AF', fontWeight: 400 }}>USDT</span>
             </div>
-            <div style={{ fontSize: 14, color: '#9CA3AF', marginTop: 4 }}>
-              {isBalanceHidden ? '≈ $•••••' : `≈ $${formatNumber(usdtAmount, 2)}`}
-            </div>
           </>
         )}
 

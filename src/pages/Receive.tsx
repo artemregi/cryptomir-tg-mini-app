@@ -4,11 +4,13 @@ import { useQuery } from '@tanstack/react-query'
 import { getDepositWallet } from '../api/endpoints'
 import { useNetworks } from '../hooks/useTokens'
 import { useLang } from '../contexts/LanguageContext'
+import { isDemoMode, MOCK_DEPOSIT_ADDRESS } from '../demo'
 
 const Receive: React.FC = () => {
   const navigate = useNavigate()
   const { t, lang } = useLang()
   const [copied, setCopied] = useState(false)
+  const demo = isDemoMode()
 
   const { data: networks = [] } = useNetworks()
 
@@ -16,15 +18,16 @@ const Receive: React.FC = () => {
   const tronNetwork = networks.find(n => n.enabled && n.name.toLowerCase().includes('tron'))
     || networks.find(n => n.enabled)
 
-  const { data: depositWallet, isLoading } = useQuery({
+  const { data: depositWallet, isLoading: walletLoading } = useQuery({
     queryKey: ['deposit-wallet', tronNetwork?.id],
     queryFn: () => getDepositWallet(tronNetwork!.id),
-    enabled: !!tronNetwork?.id,
+    enabled: !demo && !!tronNetwork?.id,
     staleTime: 5 * 60 * 1000,
   })
 
-  const address = depositWallet?.address || ''
-  const qrBase64 = depositWallet?.qr_code_png_base64 || ''
+  const isLoading = !demo && walletLoading
+  const address = demo ? MOCK_DEPOSIT_ADDRESS : (depositWallet?.address || '')
+  const qrBase64 = demo ? '' : (depositWallet?.qr_code_png_base64 || '')
 
   const handleBack = useCallback(() => {
     window.Telegram?.WebApp?.BackButton?.hide()
@@ -90,8 +93,29 @@ const Receive: React.FC = () => {
             className="flex items-center justify-center mb-4 relative"
             style={{ background: '#FFFFFF', borderRadius: 16, padding: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
           >
-            {isLoading || !qrBase64 ? (
+            {isLoading ? (
               <div style={{ width: 160, height: 160, borderRadius: 10, background: 'linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+            ) : !qrBase64 ? (
+              <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: 10 }}>
+                <rect width="160" height="160" fill="white"/>
+                {/* QR corner squares */}
+                <rect x="10" y="10" width="50" height="50" rx="4" fill="none" stroke="#111827" strokeWidth="6"/>
+                <rect x="20" y="20" width="30" height="30" rx="2" fill="#111827"/>
+                <rect x="100" y="10" width="50" height="50" rx="4" fill="none" stroke="#111827" strokeWidth="6"/>
+                <rect x="110" y="20" width="30" height="30" rx="2" fill="#111827"/>
+                <rect x="10" y="100" width="50" height="50" rx="4" fill="none" stroke="#111827" strokeWidth="6"/>
+                <rect x="20" y="110" width="30" height="30" rx="2" fill="#111827"/>
+                {/* QR dots pattern */}
+                {[70,80,90,100,110,120,130].map(x => [70,80,90,100,110,120,130].map(y =>
+                  (x + y) % 20 === 0 ? <rect key={`${x}-${y}`} x={x} y={y} width="6" height="6" rx="1" fill="#111827"/> : null
+                ))}
+                {[15,25,35,45,55,65].map(x => [70,80,90,100,110,120,130,140].map(y =>
+                  (x * y) % 30 < 10 ? <rect key={`${x}-${y}`} x={x} y={y} width="6" height="6" rx="1" fill="#111827"/> : null
+                ))}
+                {[70,80,90,100,110,120,130,140].map(x => [15,25,35,45,55,65].map(y =>
+                  (x + y * 2) % 25 < 10 ? <rect key={`${x}-${y}`} x={x} y={y} width="6" height="6" rx="1" fill="#111827"/> : null
+                ))}
+              </svg>
             ) : (
               <div className="relative">
                 <img
