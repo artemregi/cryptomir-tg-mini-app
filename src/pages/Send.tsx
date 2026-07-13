@@ -36,6 +36,8 @@ const Send: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('')
   const [kytResult, setKytResult] = useState<KYTResult | null>(null)
   const [kytChecking, setKytChecking] = useState(false)
+  const [addrVerified, setAddrVerified] = useState<boolean | null>(null)
+  const [addrVerifying, setAddrVerifying] = useState(false)
 
   // Find USDT asset
   const usdtAsset = assets.find(a => a.symbol === 'USDT' && a.enabled)
@@ -82,6 +84,21 @@ const Send: React.FC = () => {
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('error')
     },
   })
+
+  const verifyAddress = async () => {
+    if (!isValidTronAddress(address)) return
+    setAddrVerifying(true)
+    setAddrVerified(null)
+    try {
+      const res = await fetch(`https://api.trongrid.io/v1/accounts/${address}`)
+      const data = await res.json()
+      setAddrVerified(!!(data.data && data.data.length > 0))
+    } catch {
+      setAddrVerified(null)
+    } finally {
+      setAddrVerifying(false)
+    }
+  }
 
   const addressError = address && !isValidTronAddress(address)
     ? 'Адрес должен начинаться с T и содержать 34 символа' : ''
@@ -211,7 +228,7 @@ const Send: React.FC = () => {
         <div className="relative">
           <textarea
             value={address}
-            onChange={(e) => { setAddress(e.target.value.trim()); setKytResult(null) }}
+            onChange={(e) => { setAddress(e.target.value.trim()); setKytResult(null); setAddrVerified(null) }}
             placeholder="T..."
             rows={2}
             className="w-full font-mono text-sm resize-none outline-none transition-all"
@@ -232,7 +249,29 @@ const Send: React.FC = () => {
           )}
         </div>
         {addressError && <p style={{ marginTop: 6, fontSize: 12, color: '#DC2626' }}>{addressError}</p>}
-        {address && !addressError && <p style={{ marginTop: 6, fontSize: 12, color: '#059669' }}>Адрес действителен ✓</p>}
+        {address && !addressError && (
+          addrVerified === true ? (
+            <p style={{ marginTop: 6, fontSize: 12, color: '#059669', fontWeight: 500 }}>✓ Адрес получателя подтверждён</p>
+          ) : addrVerified === false ? (
+            <p style={{ marginTop: 6, fontSize: 12, color: '#D97706', fontWeight: 500 }}>⚠️ Адрес не найден в сети TRON</p>
+          ) : (
+            <button
+              onClick={verifyAddress}
+              disabled={addrVerifying}
+              style={{ marginTop: 8, fontSize: 13, fontWeight: 600, color: '#2563EB', background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}
+            >
+              {addrVerifying ? (
+                <>
+                  <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="rgba(37,99,235,0.3)" strokeWidth="3"/>
+                    <path d="M12 2a10 10 0 0110 10" stroke="#2563EB" strokeWidth="3" strokeLinecap="round"/>
+                  </svg>
+                  Проверяем...
+                </>
+              ) : '→ Проверить адрес получателя'}
+            </button>
+          )
+        )}
       </div>
 
       {/* Amount input */}

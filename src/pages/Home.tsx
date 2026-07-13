@@ -33,9 +33,8 @@ const Home: React.FC = () => {
   }
 
   const bannerCards = [
-    { label: 'Как пополнить?', gradient: 'linear-gradient(135deg,#1D4ED8,#2563EB)', shadow: 'rgba(37,99,235,0.32)' },
-    { label: 'QR‑платёж', gradient: 'linear-gradient(135deg,#0E7490,#0891B2)', shadow: 'rgba(8,145,178,0.32)', path: '/qr' },
-    { label: 'Реферальная', gradient: 'linear-gradient(135deg,#6D28D9,#7C3AED)', shadow: 'rgba(109,40,217,0.32)' },
+    { label: 'Как пополнить?', gradient: 'linear-gradient(135deg,#1D4ED8,#2563EB)', shadow: 'rgba(37,99,235,0.32)', path: '' },
+    { label: 'Реферальная', gradient: 'linear-gradient(135deg,#6D28D9,#7C3AED)', shadow: 'rgba(109,40,217,0.32)', path: '' },
   ]
 
   const actionButtons = [
@@ -66,18 +65,6 @@ const Home: React.FC = () => {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="10"/>
           <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      ),
-    },
-    {
-      label: 'Сканировать',
-      path: '/qr',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2">
-          <rect x="3" y="3" width="7" height="7"/>
-          <rect x="14" y="3" width="7" height="7"/>
-          <rect x="3" y="14" width="7" height="7"/>
-          <rect x="17" y="17" width="4" height="4"/>
         </svg>
       ),
     },
