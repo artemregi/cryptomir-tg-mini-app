@@ -83,31 +83,7 @@ const Home: React.FC = () => {
     },
   ]
 
-  const comingSoonTokens = [
-    {
-      symbol: 'TON', name: 'Toncoin',
-      gradient: 'linear-gradient(135deg,#0085CC,#00AAEE)',
-      shadow: 'rgba(0,133,204,0.25)',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M12 3L22 9L18 21H6L2 9Z" fill="white" opacity="0.95"/>
-        </svg>
-      ),
-    },
-    {
-      symbol: 'BTC', name: 'Bitcoin',
-      gradient: 'linear-gradient(135deg,#F7931A,#E8780A)',
-      shadow: 'rgba(247,147,26,0.25)',
-      icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M8 4.5H14.5C16.4 4.5 18 6.1 18 8C18 9.5 17 10.7 15.7 11.2C17.2 11.7 18.3 13.1 18.3 14.8C18.3 17 16.4 19 14.2 19H8V4.5Z" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
-          <path d="M8 12H15.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="10.5" y1="2.5" x2="10.5" y2="5.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-          <line x1="13.5" y1="18.5" x2="13.5" y2="21.5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      ),
-    },
-  ]
+  const comingSoonTokens: { symbol: string; name: string; gradient: string; shadow: string; icon: React.ReactNode }[] = []
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in" style={{ background: '#F0F4FA' }}>

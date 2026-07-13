@@ -10,6 +10,7 @@ const Receive: React.FC = () => {
   const navigate = useNavigate()
   const { t, lang } = useLang()
   const [copied, setCopied] = useState(false)
+  const [selectedToken, setSelectedToken] = useState<'USDT' | 'USDC'>('USDT')
   const demo = isDemoMode()
 
   const { data: networks = [] } = useNetworks()
@@ -79,13 +80,34 @@ const Receive: React.FC = () => {
           </h1>
         </div>
 
+        {/* Token switcher */}
+        <div className="flex mb-5" style={{ background: '#FFFFFF', borderRadius: 14, padding: 4, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+          {(['USDT', 'USDC'] as const).map(token => (
+            <button
+              key={token}
+              onClick={() => { setSelectedToken(token); setCopied(false) }}
+              className="flex-1 py-2.5 font-semibold transition-all active:scale-95"
+              style={{
+                background: selectedToken === token ? '#2563EB' : 'transparent',
+                color: selectedToken === token ? '#FFFFFF' : '#6B7280',
+                borderRadius: 10,
+                fontSize: 15,
+                border: 'none',
+                boxShadow: selectedToken === token ? '0 2px 8px rgba(37,99,235,0.3)' : 'none',
+              }}
+            >
+              {token}
+            </button>
+          ))}
+        </div>
+
         {/* QR Card */}
         <div
           className="flex flex-col items-center mb-4"
           style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)', padding: 24 }}
         >
           <div style={{ color: '#9CA3AF', fontSize: 13, marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>
-            {lang === 'ru' ? 'Ваш USDT адрес' : 'Your USDT address'}
+            {lang === 'ru' ? `Ваш ${selectedToken} адрес` : `Your ${selectedToken} address`}
           </div>
 
           {/* QR */}
@@ -185,7 +207,7 @@ const Receive: React.FC = () => {
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           <span style={{ fontSize: 13, color: '#D97706', fontWeight: 500 }}>
-            {lang === 'ru' ? 'Принимает только USDT TRC-20' : 'Accepts only USDT TRC-20'}
+            {lang === 'ru' ? `Принимает только ${selectedToken} TRC-20` : `Accepts only ${selectedToken} TRC-20`}
           </span>
         </div>
       </div>

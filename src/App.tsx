@@ -9,7 +9,6 @@ import History from './pages/History'
 import Profile from './pages/Profile'
 import KYC from './pages/KYC'
 import Card from './pages/Card'
-import Exchange from './pages/Exchange'
 import QR from './pages/QR'
 import Auth from './pages/Auth'
 import { LanguageProvider } from './contexts/LanguageContext'
@@ -50,7 +49,6 @@ const AppInner: React.FC = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/kyc" element={<KYC />} />
         <Route path="/card" element={<Card />} />
-        <Route path="/exchange" element={<Exchange />} />
         <Route path="/qr" element={<QR />} />
       </Routes>
 

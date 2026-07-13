@@ -65,6 +65,7 @@ const KYC: React.FC = () => {
   const submitMutation    = useSubmitKyc()
   const resubmitMutation  = useResubmitKyc()
   const fileInputRef      = useRef<HTMLInputElement>(null)
+  const activePhotoSlot   = useRef<number>(0)
 
   const kycStatus = kycInfo?.cardAccountStatus ?? 'NOT_SUBMITTED'
   const isResubmit = kycStatus === 'REJECTED' || kycStatus === 'REQUIRE_DOC_UPDATE'
@@ -77,8 +78,8 @@ const KYC: React.FC = () => {
   const [birthDate, setBirthDate] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
-  const [photo, setPhoto] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<(File | null)[]>([null, null])
+  const [photoPreviews, setPhotoPreviews] = useState<(string | null)[]>([null, null])
   const [uploading, setUploading] = useState(false)
   const [validationError, setValidationError] = useState('')
 
@@ -118,10 +119,23 @@ const KYC: React.FC = () => {
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setPhoto(file)
+    const slot = activePhotoSlot.current
+    setPhotos(prev => { const next = [...prev]; next[slot] = file; return next })
     const reader = new FileReader()
-    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string)
+    reader.onload = (ev) => setPhotoPreviews(prev => { const next = [...prev]; next[slot] = ev.target?.result as string; return next })
     reader.readAsDataURL(file)
+    // reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const openPhotoSlot = (slot: number) => {
+    activePhotoSlot.current = slot
+    fileInputRef.current?.click()
+  }
+
+  const removePhoto = (slot: number) => {
+    setPhotos(prev => { const next = [...prev]; next[slot] = null; return next })
+    setPhotoPreviews(prev => { const next = [...prev]; next[slot] = null; return next })
   }
 
   const handleSubmit = async () => {
@@ -149,16 +163,16 @@ const KYC: React.FC = () => {
       setValidationError(lang === 'ru' ? 'Введите номер документа' : 'Enter document number')
       return
     }
-    if (!photo) {
-      setValidationError(lang === 'ru' ? 'Загрузите фото документа' : 'Upload document photo')
+    const uploadedPhotos = photos.filter(Boolean) as File[]
+    if (uploadedPhotos.length === 0) {
+      setValidationError(lang === 'ru' ? 'Загрузите хотя бы одно фото документа' : 'Upload at least one document photo')
       return
     }
 
-    let photoUrl: string
+    let photoUrls: string[]
     try {
       setUploading(true)
-      const result = await uploadKycPhoto(photo)
-      photoUrl = result.url
+      photoUrls = await Promise.all(uploadedPhotos.map(f => uploadKycPhoto(f).then(r => r.url)))
     } catch {
       setUploading(false)
       setValidationError(lang === 'ru' ? 'Ошибка загрузки фото. Попробуйте снова.' : 'Photo upload failed. Please try again.')
@@ -175,7 +189,7 @@ const KYC: React.FC = () => {
       nationality: finalCountry,
       docType,
       docNumber:   docNumber.trim(),
-      photos:      photoUrl,
+      photos:      photoUrls.join(','),
       phone:       '',
     }
 
@@ -426,11 +440,14 @@ const KYC: React.FC = () => {
           </div>
         </div>
 
-        {/* Photo upload */}
+        {/* Photo upload — one per page */}
         <div style={{ background: '#FFFFFF', borderRadius: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', padding: 20, marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
-            {t('uploadPhoto')} *
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+            {lang === 'ru' ? 'Фото документа' : 'Document photos'} *
           </div>
+          <p style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>
+            {lang === 'ru' ? 'Загрузите каждую страницу по отдельности' : 'Upload each page separately'}
+          </p>
           <input
             ref={fileInputRef}
             type="file"
@@ -439,39 +456,59 @@ const KYC: React.FC = () => {
             onChange={handlePhotoSelect}
             style={{ display: 'none' }}
           />
-          {photoPreview ? (
-            <div className="relative">
-              <img
-                src={photoPreview}
-                alt="Document"
-                className="w-full rounded-2xl object-cover"
-                style={{ maxHeight: 200 }}
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full mt-3 py-3 rounded-xl font-semibold"
-                style={{ background: '#F3F4F6', color: '#374151', fontSize: 14, border: 'none' }}
-              >
-                {t('changePhoto')}
-              </button>
-            </div>
-          ) : (
-            <div
-              className="flex flex-col items-center justify-center cursor-pointer active:opacity-70"
-              style={{ border: '2px dashed #E5E7EB', borderRadius: 16, padding: 32 }}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="flex items-center justify-center mb-3" style={{ width: 56, height: 56, borderRadius: '50%', background: '#EFF6FF' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
+          <div className="space-y-3">
+            {[0, 1].map(slot => (
+              <div key={slot}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', marginBottom: 6 }}>
+                  {lang === 'ru' ? `Страница ${slot + 1}${slot === 0 ? ' *' : ' (необязательно)'}` : `Page ${slot + 1}${slot === 0 ? ' *' : ' (optional)'}`}
+                </div>
+                {photoPreviews[slot] ? (
+                  <div>
+                    <div className="relative" style={{ borderRadius: 14, overflow: 'hidden' }}>
+                      <img
+                        src={photoPreviews[slot]!}
+                        alt={`Page ${slot + 1}`}
+                        className="w-full object-cover"
+                        style={{ maxHeight: 160, display: 'block' }}
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => openPhotoSlot(slot)}
+                        className="flex-1 py-2.5 rounded-xl font-semibold"
+                        style={{ background: '#F3F4F6', color: '#374151', fontSize: 13, border: 'none' }}
+                      >
+                        {lang === 'ru' ? 'Заменить' : 'Replace'}
+                      </button>
+                      <button
+                        onClick={() => removePhoto(slot)}
+                        className="py-2.5 px-4 rounded-xl font-semibold"
+                        style={{ background: '#FEF2F2', color: '#DC2626', fontSize: 13, border: 'none' }}
+                      >
+                        {lang === 'ru' ? 'Удалить' : 'Remove'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="flex flex-col items-center justify-center cursor-pointer active:opacity-70"
+                    style={{ border: '2px dashed #E5E7EB', borderRadius: 14, padding: 24 }}
+                    onClick={() => openPhotoSlot(slot)}
+                  >
+                    <div className="flex items-center justify-center mb-2" style={{ width: 44, height: 44, borderRadius: '50%', background: '#EFF6FF' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#2563EB' }}>{lang === 'ru' ? 'Загрузить фото' : 'Upload photo'}</span>
+                    <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>JPG, PNG {lang === 'ru' ? 'или' : 'or'} PDF</span>
+                  </div>
+                )}
               </div>
-              <span style={{ fontSize: 14, fontWeight: 600, color: '#2563EB' }}>{t('uploadPhoto')}</span>
-              <span style={{ fontSize: 12, color: '#9CA3AF', marginTop: 4 }}>JPG, PNG {lang === 'ru' ? 'или' : 'or'} PDF</span>
-            </div>
-          )}
+            ))}
+          </div>
         </div>
 
         {/* Validation error */}
